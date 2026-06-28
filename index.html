@@ -1090,11 +1090,23 @@ async function renderDashboard() {
           </div>`;
     });
 
+    const quizUrl = `quiz.html?topic=${encodeURIComponent(topic.name)}&topicId=${topic.id}&color=${encodeURIComponent(topic.color)}&day=${dayNum}&totalDays=${topic.days||30}&hours=${topic.hours||1.5}&numTasks=${sub.length}`;
     html += `
         </div>
-        <div class="prog-track">
+        <div class="prog-track" style="margin-bottom:12px;">
           <div class="prog-fill" style="width:${pct}%;background:linear-gradient(90deg,${topic.color},${topic.color}99);"></div>
         </div>
+        <a href="${quizUrl}" style="display:flex;align-items:center;justify-content:center;gap:7px;
+          padding:9px;border-radius:10px;text-decoration:none;font-size:0.8rem;font-weight:700;
+          background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+          color:rgba(255,255,255,0.5);transition:all 0.2s;width:100%;"
+          onmouseover="this.style.background='${topic.color}18';this.style.borderColor='${topic.color}44';this.style.color='${topic.color}'"
+          onmouseout="this.style.background='rgba(255,255,255,0.04)';this.style.borderColor='rgba(255,255,255,0.08)';this.style.color='rgba(255,255,255,0.5)'">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+          </svg>
+          Take Today's Quiz — Pass to auto-complete all tasks
+        </a>
       </div>`;
   });
 

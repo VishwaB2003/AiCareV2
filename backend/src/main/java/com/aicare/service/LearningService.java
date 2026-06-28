@@ -4,6 +4,9 @@ import com.aicare.dto.DailyTasksRequest;
 import com.aicare.dto.DailyTasksResponse;
 import com.aicare.dto.LearningRequest;
 import com.aicare.dto.LearningResponse;
+import com.aicare.dto.QuizRequest;
+import com.aicare.dto.QuizQuestion;
+import com.aicare.dto.QuizResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -465,6 +468,162 @@ Respond ONLY with JSON, no markdown:
         }
         r.setTasks(taskList);
         return r;
+    }
+
+    // ── QUIZ GENERATION ──────────────────────────────────────────────────────
+
+    public QuizResponse generateQuiz(QuizRequest req) {
+        String topic    = req.getTopic();
+        int    day      = Math.max(1, req.getDayNumber());
+        int    total    = req.getTotalDays() > 0 ? req.getTotalDays() : 30;
+        double hours    = req.getDailyHours() > 0 ? req.getDailyHours() : 1.5;
+
+        double pct = (double) day / total;
+        String phase = pct <= 0.20 ? "Foundation"
+                     : pct <= 0.50 ? "Intermediate"
+                     : pct <= 0.80 ? "Advanced" : "Pro";
+
+        boolean hasKey = geminiApiKey != null && !geminiApiKey.isBlank()
+                      && !geminiApiKey.equals("YOUR_GEMINI_API_KEY");
+
+        List<QuizQuestion> questions;
+        try {
+            questions = hasKey
+                ? callGeminiForQuiz(topic, day, total, phase)
+                : fallbackQuiz(topic, day, phase);
+        } catch (Exception e) {
+            questions = fallbackQuiz(topic, day, phase);
+        }
+
+        QuizResponse resp = new QuizResponse();
+        resp.setQuestions(questions);
+        resp.setPhase(phase);
+        resp.setDayNumber(day);
+        return resp;
+    }
+
+    private List<QuizQuestion> callGeminiForQuiz(String topic, int day, int total, String phase) throws Exception {
+        String prompt = """
+You are a quiz generator for a student learning "%s" on Day %d of %d (%s phase).
+
+Generate EXACTLY 5 multiple-choice questions that test understanding of %s concepts appropriate for the %s phase.
+Questions must be clear, unambiguous, and have exactly one correct answer.
+
+Respond ONLY with valid JSON, no markdown:
+{
+  "questions": [
+    {
+      "question": "Question text here?",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correctIndex": 0,
+      "explanation": "Brief explanation why the answer is correct"
+    }
+  ]
+}
+""".formatted(topic, day, total, phase, topic, phase);
+
+        String body = """
+            {"contents":[{"parts":[{"text":%s}]}],"generationConfig":{"responseMimeType":"application/json"}}
+            """.formatted(toJsonString(prompt));
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(GEMINI_URL + geminiApiKey))
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(body))
+            .build();
+
+        HttpResponse<String> res = client.send(request, HttpResponse.BodyHandlers.ofString());
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode root = mapper.readTree(res.body());
+        String text = root.at("/candidates/0/content/parts/0/text").asText();
+        JsonNode parsed = mapper.readTree(text);
+
+        List<QuizQuestion> list = new ArrayList<>();
+        for (JsonNode q : parsed.path("questions")) {
+            List<String> opts = new ArrayList<>();
+            q.path("options").forEach(o -> opts.add(o.asText()));
+            list.add(new QuizQuestion(
+                q.path("question").asText(),
+                opts,
+                q.path("correctIndex").asInt(0),
+                q.path("explanation").asText("")
+            ));
+        }
+        return list;
+    }
+
+    private List<QuizQuestion> fallbackQuiz(String topic, int day, String phase) {
+        return switch (phase) {
+            case "Foundation" -> List.of(
+                new QuizQuestion("What is the primary purpose of " + topic + "?",
+                    List.of("To replace all existing tools", "To provide a managed, scalable solution for common computing needs", "To only work with legacy systems", "To eliminate the need for software developers"),
+                    1, topic + " is designed to provide scalable and managed solutions for modern computing needs."),
+                new QuizQuestion("Which of the following best describes a key benefit of using " + topic + "?",
+                    List.of("Increased hardware costs", "Reduced scalability", "Faster deployment and managed infrastructure", "Requires more manual configuration than alternatives"),
+                    2, "One of the main advantages of " + topic + " is the ability to deploy faster with managed infrastructure."),
+                new QuizQuestion("In the context of " + topic + ", what does 'provisioning' mean?",
+                    List.of("Deleting unused resources", "Setting up and allocating resources needed to run services", "Monitoring performance metrics", "Writing application code"),
+                    1, "Provisioning refers to the setup and allocation of resources required for services in " + topic + "."),
+                new QuizQuestion("Which step comes first when getting started with " + topic + "?",
+                    List.of("Writing production code immediately", "Setting up your account and environment", "Optimizing for cost", "Deploying to multiple regions"),
+                    1, "The first step is always to set up your account and environment before doing anything else."),
+                new QuizQuestion("What is a best practice when learning " + topic + " as a beginner?",
+                    List.of("Skip documentation and learn by trial and error only", "Follow official tutorials and use the free tier", "Deploy directly to production to learn faster", "Avoid using the official documentation"),
+                    1, "Following official tutorials and using the free tier is the safest and most effective way to learn " + topic + ".")
+            );
+            case "Intermediate" -> List.of(
+                new QuizQuestion("What is the principle of least privilege in " + topic + "?",
+                    List.of("Give all users admin access for convenience", "Grant only the minimum permissions needed to perform a task", "Share credentials across team members", "Disable all access controls"),
+                    1, "Least privilege means granting only the minimum permissions required, reducing security risk."),
+                new QuizQuestion("Which approach is recommended for handling configuration in " + topic + "?",
+                    List.of("Hardcode all values directly in the application", "Use environment variables or a configuration service", "Store credentials in version control", "Use the same config for dev and production"),
+                    1, "Using environment variables or a configuration service keeps secrets out of code and makes deployments flexible."),
+                new QuizQuestion("What does horizontal scaling mean in " + topic + "?",
+                    List.of("Upgrading to a bigger single machine", "Adding more instances of the same service", "Reducing the number of servers", "Increasing the disk size of one machine"),
+                    1, "Horizontal scaling means adding more instances (machines) rather than making one machine bigger."),
+                new QuizQuestion("When debugging an issue in " + topic + ", what should you check first?",
+                    List.of("Delete and recreate everything", "Restart without investigating", "Check logs and error messages for specific details", "Assume it's a network issue"),
+                    2, "Logs and error messages contain the most direct information about what went wrong."),
+                new QuizQuestion("What is the benefit of infrastructure as code (IaC) with " + topic + "?",
+                    List.of("Makes infrastructure harder to reproduce", "Allows manual-only deployments", "Enables repeatable, version-controlled infrastructure deployment", "Increases deployment time"),
+                    2, "IaC makes deployments reproducible, version-controlled, and consistent across environments.")
+            );
+            case "Advanced" -> List.of(
+                new QuizQuestion("What is the primary purpose of a load balancer in a " + topic + " architecture?",
+                    List.of("To store data permanently", "To distribute incoming traffic across multiple instances", "To replace a database", "To encrypt all network traffic"),
+                    1, "A load balancer distributes traffic across multiple instances to prevent any one instance from being overwhelmed."),
+                new QuizQuestion("Which strategy best ensures high availability in " + topic + "?",
+                    List.of("Running everything on a single server", "Deploying across multiple availability zones", "Using only one region", "Disabling auto-scaling"),
+                    1, "Deploying across multiple availability zones ensures the system stays up even if one zone fails."),
+                new QuizQuestion("What is observability in the context of " + topic + "?",
+                    List.of("Making the code open source", "The ability to measure and understand internal system state through metrics, logs, and traces", "Using only error logs", "A type of database"),
+                    1, "Observability combines metrics, logs, and traces to give visibility into how a system is behaving."),
+                new QuizQuestion("Why is cost optimization important when running " + topic + " at scale?",
+                    List.of("It reduces system reliability", "Cloud costs grow significantly at scale; optimization ensures efficiency", "It's only relevant for startups", "It makes the system slower"),
+                    1, "At scale, small inefficiencies become large costs — optimization is critical for sustainable operations."),
+                new QuizQuestion("What does a Circuit Breaker pattern do in distributed systems using " + topic + "?",
+                    List.of("Physically cuts power to servers", "Stops sending requests to a failing service to prevent cascading failures", "Increases request timeouts indefinitely", "Duplicates all API calls"),
+                    1, "A circuit breaker detects failures and stops sending requests to prevent cascading failures across services.")
+            );
+            default -> List.of( // Pro
+                new QuizQuestion("What is the CAP theorem and how does it apply to " + topic + "?",
+                    List.of("A theory about computer hardware capacity", "The impossibility of simultaneously guaranteeing Consistency, Availability, and Partition tolerance", "A cloud cost calculation method", "A security framework"),
+                    1, "CAP theorem states distributed systems can only guarantee 2 of 3: Consistency, Availability, Partition tolerance."),
+                new QuizQuestion("In a microservices architecture using " + topic + ", what is service mesh used for?",
+                    List.of("Storing user data", "Managing service-to-service communication, security, and observability", "Replacing the database layer", "Compiling application code"),
+                    1, "A service mesh handles service-to-service communication, providing load balancing, security, and observability."),
+                new QuizQuestion("What is blue-green deployment in " + topic + "?",
+                    List.of("A color scheme for dashboards", "Running two identical environments and switching traffic to the new one after testing", "A type of database migration", "A network security protocol"),
+                    1, "Blue-green deployment uses two identical environments — traffic switches to the new one after validation, enabling zero-downtime deploys."),
+                new QuizQuestion("What is eventual consistency in distributed " + topic + " systems?",
+                    List.of("Data is always consistent immediately after any write", "All replicas will converge to the same value given enough time without new updates", "A database locking mechanism", "A caching strategy"),
+                    1, "Eventual consistency guarantees that, given no new updates, all replicas will eventually reach the same value."),
+                new QuizQuestion("Which pattern is best for handling cross-cutting concerns like auth and logging in " + topic + "?",
+                    List.of("Copy-paste the logic into every service", "Use an API gateway or middleware layer", "Disable logging in production", "Handle each concern in the database"),
+                    1, "An API gateway centralizes cross-cutting concerns like authentication, rate limiting, and logging.")
+            );
+        };
     }
 
     // ── HELPERS ───────────────────────────────────────────────────────────────

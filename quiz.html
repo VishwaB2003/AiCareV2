@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Daily Quiz — AiCare</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0a0f;
+    --card: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --text: rgba(255,255,255,0.9);
+    --sub: rgba(255,255,255,0.4);
+    --accent: #00c6ff;
+    --green: #4ade80;
+    --red: #f87171;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+
+  .header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 20px 24px; border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+  .back-btn {
+    display: flex; align-items: center; gap: 6px;
+    color: var(--sub); text-decoration: none; font-size: 0.82rem;
+    padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .back-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+  .header-info { flex: 1; }
+  .header-topic { font-weight: 700; font-size: 1rem; }
+  .header-meta { font-size: 0.75rem; color: var(--sub); margin-top: 2px; }
+
+  .phase-pill {
+    font-size: 0.68rem; font-weight: 700; padding: 3px 10px;
+    border-radius: 20px; letter-spacing: 0.04em;
+  }
+  .phase-Foundation    { background: #4ade8018; color: #4ade80; border: 1px solid #4ade8033; }
+  .phase-Intermediate  { background: #00c6ff18; color: #00c6ff; border: 1px solid #00c6ff33; }
+  .phase-Advanced      { background: #fb923c18; color: #fb923c; border: 1px solid #fb923c33; }
+  .phase-Pro           { background: #a78bfa18; color: #a78bfa; border: 1px solid #a78bfa33; }
+
+  .container { max-width: 640px; margin: 0 auto; padding: 32px 20px; }
+
+  /* ── Loading ── */
+  .loading {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 16px; padding: 80px 20px;
+  }
+  .spinner {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.08);
+    border-top-color: var(--accent);
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: var(--sub); font-size: 0.875rem; }
+
+  /* ── Progress bar ── */
+  .quiz-progress { margin-bottom: 28px; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--sub); margin-bottom: 8px; }
+  .progress-track { height: 4px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; background: var(--accent); }
+
+  /* ── Question card ── */
+  .question-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px; margin-bottom: 20px;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .question-num { font-size: 0.7rem; color: var(--sub); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+  .question-text { font-size: 1rem; font-weight: 600; line-height: 1.55; color: var(--text); }
+
+  /* ── Options ── */
+  .options { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
+  .option-btn {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px; border-radius: 12px; cursor: pointer;
+    border: 1px solid var(--border); background: rgba(255,255,255,0.02);
+    text-align: left; width: 100%; color: var(--text); font-size: 0.875rem;
+    transition: all 0.15s; line-height: 1.4;
+  }
+  .option-btn:hover:not(:disabled) { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.06); }
+  .option-letter {
+    width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700;
+    background: rgba(255,255,255,0.06); color: var(--sub);
+    transition: all 0.15s;
+  }
+  .option-btn.correct { border-color: var(--green); background: rgba(74,222,128,0.08); }
+  .option-btn.correct .option-letter { background: var(--green); color: #000; }
+  .option-btn.wrong   { border-color: var(--red);   background: rgba(248,113,113,0.08); }
+  .option-btn.wrong   .option-letter { background: var(--red);   color: #fff; }
+  .option-btn:disabled { cursor: default; }
+
+  /* ── Explanation ── */
+  .explanation {
+    margin-top: 16px; padding: 14px 16px; border-radius: 10px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    font-size: 0.8rem; color: var(--sub); line-height: 1.6;
+    display: none;
+  }
+  .explanation.show { display: block; animation: fadeIn 0.3s ease; }
+  .explanation strong { color: var(--text); }
+
+  /* ── Next btn ── */
+  .next-btn {
+    width: 100%; padding: 14px; border-radius: 12px; border: none; cursor: pointer;
+    font-size: 0.9rem; font-weight: 700; transition: all 0.2s;
+    background: linear-gradient(135deg, #00c6ff, #0072ff);
+    color: #fff; display: none; margin-top: 4px;
+  }
+  .next-btn.show { display: block; animation: fadeIn 0.3s ease; }
+  .next-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  /* ── Result screen ── */
+  .result-screen { text-align: center; animation: fadeIn 0.4s ease; }
+  .result-icon { font-size: 4rem; margin-bottom: 16px; }
+  .result-score { font-size: 3rem; font-weight: 900; margin-bottom: 8px; }
+  .result-score span { font-size: 1.5rem; color: var(--sub); font-weight: 400; }
+  .result-label { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+  .result-sub { font-size: 0.875rem; color: var(--sub); margin-bottom: 32px; line-height: 1.6; }
+
+  .result-pass  .result-score { color: var(--green); }
+  .result-fail  .result-score { color: var(--red); }
+
+  .result-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px; margin-bottom: 20px;
+  }
+  .result-breakdown { display: flex; justify-content: center; gap: 32px; margin-bottom: 24px; }
+  .breakdown-item { text-align: center; }
+  .breakdown-val { font-size: 1.5rem; font-weight: 800; }
+  .breakdown-lbl { font-size: 0.7rem; color: var(--sub); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .action-btns { display: flex; flex-direction: column; gap: 10px; }
+  .btn-primary {
+    padding: 14px; border-radius: 12px; border: none; cursor: pointer;
+    font-size: 0.9rem; font-weight: 700; transition: all 0.2s;
+    background: linear-gradient(135deg, #00c6ff, #0072ff); color: #fff;
+  }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-secondary {
+    padding: 14px; border-radius: 12px; cursor: pointer;
+    font-size: 0.875rem; font-weight: 600; transition: all 0.2s;
+    background: transparent; color: var(--sub);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+
+  .pass-banner {
+    background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.25);
+    border-radius: 12px; padding: 16px; margin-bottom: 20px;
+    font-size: 0.875rem; color: var(--green); line-height: 1.6;
+    animation: fadeIn 0.4s ease;
+  }
+  .fail-banner {
+    background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.25);
+    border-radius: 12px; padding: 16px; margin-bottom: 20px;
+    font-size: 0.875rem; color: var(--red); line-height: 1.6;
+    animation: fadeIn 0.4s ease;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html" class="back-btn">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Dashboard
+  </a>
+  <div class="header-info">
+    <div class="header-topic" id="hdr-topic">Loading…</div>
+    <div class="header-meta" id="hdr-meta"></div>
+  </div>
+  <div class="phase-pill" id="hdr-phase"></div>
+</div>
+
+<div class="container" id="main">
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Generating your quiz…</div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:8080/api';
+const params = new URLSearchParams(location.search);
+const TOPIC      = params.get('topic')    || 'Unknown Topic';
+const TOPIC_ID   = params.get('topicId')  || '';
+const COLOR      = params.get('color')    || '#00c6ff';
+const DAY        = parseInt(params.get('day'))       || 1;
+const TOTAL_DAYS = parseInt(params.get('totalDays')) || 30;
+const HOURS      = parseFloat(params.get('hours'))   || 1.5;
+const NUM_TASKS  = parseInt(params.get('numTasks'))  || 4;
+
+let questions = [], current = 0, score = 0;
+
+function authHeaders() {
+  const token = localStorage.getItem('aicare_token');
+  return { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+}
+
+function todayKey() { return new Date().toISOString().slice(0, 10); }
+function quizCacheKey() { return `quiz_${TOPIC_ID}_${todayKey()}`; }
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.getElementById('hdr-topic').textContent = TOPIC;
+document.getElementById('hdr-meta').textContent = `Day ${DAY} of ${TOTAL_DAYS} · ${HOURS}h today`;
+
+async function loadQuiz() {
+  // Check cache first
+  const cached = localStorage.getItem(quizCacheKey());
+  if (cached) {
+    const data = JSON.parse(cached);
+    questions = data.questions;
+    renderPhase(data.phase);
+    renderQuestion();
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/ai/quiz`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ topic: TOPIC, dayNumber: DAY, totalDays: TOTAL_DAYS, dailyHours: HOURS })
+    });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    questions = data.questions;
+    localStorage.setItem(quizCacheKey(), JSON.stringify(data));
+    renderPhase(data.phase);
+    renderQuestion();
+  } catch {
+    // Fallback local questions
+    questions = getFallbackQuestions();
+    renderPhase('Foundation');
+    renderQuestion();
+  }
+}
+
+function renderPhase(phase) {
+  const pill = document.getElementById('hdr-phase');
+  pill.textContent = phase;
+  pill.className = `phase-pill phase-${phase}`;
+}
+
+// ── Question renderer ─────────────────────────────────────────────────────────
+function renderQuestion() {
+  if (current >= questions.length) { showResult(); return; }
+  const q = questions[current];
+  const letters = ['A', 'B', 'C', 'D'];
+  const pct = Math.round((current / questions.length) * 100);
+
+  document.getElementById('main').innerHTML = `
+    <div class="quiz-progress">
+      <div class="progress-label">
+        <span>Question ${current + 1} of ${questions.length}</span>
+        <span>${score} correct so far</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" style="width:${pct}%;background:${COLOR};"></div>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <div class="question-num">Question ${current + 1}</div>
+      <div class="question-text">${q.question}</div>
+      <div class="options" id="options">
+        ${q.options.map((opt, i) => `
+          <button class="option-btn" id="opt-${i}" onclick="selectAnswer(${i})">
+            <span class="option-letter">${letters[i]}</span>
+            <span>${opt}</span>
+          </button>
+        `).join('')}
+      </div>
+      <div class="explanation" id="explanation">
+        <strong>Explanation:</strong> ${q.explanation || 'That is the correct answer based on the concept covered today.'}
+      </div>
+    </div>
+
+    <button class="next-btn" id="next-btn" onclick="nextQuestion()">
+      ${current + 1 < questions.length ? 'Next Question →' : 'See Results →'}
+    </button>
+  `;
+}
+
+function selectAnswer(chosen) {
+  const q = questions[current];
+  const correct = q.correctIndex;
+  if (chosen === correct) score++;
+
+  // Disable all buttons
+  document.querySelectorAll('.option-btn').forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === correct) btn.classList.add('correct');
+    else if (i === chosen && chosen !== correct) btn.classList.add('wrong');
+  });
+
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('next-btn').classList.add('show');
+}
+
+function nextQuestion() {
+  current++;
+  renderQuestion();
+}
+
+// ── Result screen ─────────────────────────────────────────────────────────────
+function showResult() {
+  const passed = score >= 4;
+  const phaseColor = COLOR;
+
+  if (passed) markTopicDone();
+
+  const banner = passed
+    ? `<div class="pass-banner">
+        ✅ <strong>All tasks marked as done!</strong><br>
+        You scored ${score}/5 — great understanding of today's topic. Your daily tasks have been automatically completed.
+       </div>`
+    : `<div class="fail-banner">
+        ❌ <strong>Not quite there yet.</strong><br>
+        You scored ${score}/5 — you need 4 or more to auto-complete today's tasks. Review the material and try again tomorrow!
+       </div>`;
+
+  document.getElementById('main').innerHTML = `
+    <div class="result-screen ${passed ? 'result-pass' : 'result-fail'}">
+      <div class="result-icon">${passed ? '🏆' : '📚'}</div>
+      <div class="result-score">${score}<span>/5</span></div>
+      <div class="result-label">${passed ? 'Quiz Passed!' : 'Keep Studying'}</div>
+      <div class="result-sub">${passed
+        ? 'Excellent! You demonstrated strong understanding of today\'s topic.'
+        : 'You need 4 or more correct answers to pass. Review the material and try again tomorrow.'
+      }</div>
+
+      ${banner}
+
+      <div class="result-card">
+        <div class="result-breakdown">
+          <div class="breakdown-item">
+            <div class="breakdown-val" style="color:#4ade80;">${score}</div>
+            <div class="breakdown-lbl">Correct</div>
+          </div>
+          <div class="breakdown-item">
+            <div class="breakdown-val" style="color:#f87171;">${5 - score}</div>
+            <div class="breakdown-lbl">Wrong</div>
+          </div>
+          <div class="breakdown-item">
+            <div class="breakdown-val" style="color:${phaseColor};">${Math.round(score / 5 * 100)}%</div>
+            <div class="breakdown-lbl">Score</div>
+          </div>
+        </div>
+
+        <div class="action-btns">
+          <button class="btn-primary" onclick="location.href='index.html'">
+            Back to Dashboard
+          </button>
+          ${!passed ? `<button class="btn-secondary" onclick="retakeQuiz()">
+            Retake Quiz (uses same questions)
+          </button>` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ── Mark all tasks done ───────────────────────────────────────────────────────
+function markTopicDone() {
+  const today = todayKey();
+  const state = JSON.parse(localStorage.getItem('aicare_state') || '{}');
+  if (!state.checked) state.checked = {};
+
+  // Mark all NUM_TASKS tasks for this topic as done today
+  for (let i = 0; i < NUM_TASKS; i++) {
+    const key = `${today}_${TOPIC_ID}_${i}`;
+    state.checked[key] = true;
+  }
+  localStorage.setItem('aicare_state', JSON.stringify(state));
+
+  // Also send each check to the backend
+  for (let i = 0; i < NUM_TASKS; i++) {
+    fetch(`${API}/study/check`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ topicId: parseInt(TOPIC_ID), taskIndex: i, checked: true })
+    }).catch(() => {});
+  }
+}
+
+function retakeQuiz() {
+  current = 0;
+  score = 0;
+  renderQuestion();
+}
+
+// ── Fallback questions if API unavailable ─────────────────────────────────────
+function getFallbackQuestions() {
+  return [
+    {
+      question: `What is the main purpose of studying ${TOPIC} on Day ${DAY}?`,
+      options: [
+        `To master all of ${TOPIC} in one session`,
+        `To build progressive understanding through structured daily study`,
+        `To skip foundational concepts and go straight to advanced topics`,
+        `To memorize as many facts as possible`
+      ],
+      correctIndex: 1,
+      explanation: `Progressive daily study helps build lasting understanding by moving from foundations to advanced concepts step by step.`
+    },
+    {
+      question: `Which study technique is most effective when learning ${TOPIC}?`,
+      options: [
+        `Reading passively without taking notes`,
+        `Watching videos without practicing`,
+        `Active learning: taking notes, practicing, and reviewing`,
+        `Studying only when an exam is approaching`
+      ],
+      correctIndex: 2,
+      explanation: `Active learning — combining notes, practice, and review — leads to much better retention than passive study.`
+    },
+    {
+      question: `What should you do when you encounter a difficult concept in ${TOPIC}?`,
+      options: [
+        `Skip it and hope it doesn't matter`,
+        `Give up and move to another topic`,
+        `Break it down, look it up in docs, and practice a small example`,
+        `Memorize it without understanding`
+      ],
+      correctIndex: 2,
+      explanation: `Breaking down difficult concepts and practicing examples is the most effective way to build genuine understanding.`
+    },
+    {
+      question: `How many hours should you spend studying ${TOPIC} today based on your plan?`,
+      options: [
+        `As little as possible`,
+        `${HOURS} hours as planned`,
+        `8 hours to speed up progress`,
+        `0 hours — passive exposure is enough`
+      ],
+      correctIndex: 1,
+      explanation: `Sticking to your planned ${HOURS} hours maintains a consistent pace and prevents burnout while ensuring steady progress.`
+    },
+    {
+      question: `What is the best way to measure your progress in ${TOPIC}?`,
+      options: [
+        `Count the hours spent watching videos`,
+        `Test yourself and try to explain concepts without notes`,
+        `Count the number of pages read`,
+        `Follow others' learning paths exactly`
+      ],
+      correctIndex: 1,
+      explanation: `Testing yourself and explaining concepts without notes (the Feynman technique) is the most reliable way to know if you truly understand.`
+    }
+  ];
+}
+
+loadQuiz();
+</script>
+</body>
+</html>
