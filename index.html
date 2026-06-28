@@ -362,51 +362,150 @@
 
     /* ── LIGHT MODE ── */
     body.light {
-      background: #f0f4f8;
-      color: #1a202c;
+      background: linear-gradient(135deg, #eef4ff 0%, #f8faff 60%, #f0f7ff 100%) !important;
+      color: #0f172a;
     }
+    /* Sidebar */
     body.light .sidebar {
-      background: rgba(255,255,255,0.85);
-      border-right-color: rgba(0,0,0,0.08);
+      background: rgba(255,255,255,0.97) !important;
+      border-right: 1px solid rgba(0,0,0,0.07) !important;
+      box-shadow: 2px 0 20px rgba(0,0,0,0.06);
     }
-    body.light .sidebar-brand { border-bottom-color: rgba(0,0,0,0.08); }
-    body.light .section-label { color: rgba(0,0,0,0.35); }
-    body.light .sidebar-link { color: rgba(0,0,0,0.5); }
-    body.light .sidebar-link:hover { background: rgba(0,0,0,0.05); color: rgba(0,0,0,0.8); }
-    body.light .sidebar-link.active { color: #0072ff; background: rgba(0,114,255,0.1); border-color: rgba(0,114,255,0.25); }
-    body.light .sidebar-user { border-top-color: rgba(0,0,0,0.08); }
-    body.light .user-pill { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.08); }
-    body.light .brand-name { color: #1a202c; }
-    body.light .brand-sub { color: rgba(0,0,0,0.4); }
-    body.light .glass, body.light .glass-card, body.light .stat-card, body.light .topic-card {
-      background: rgba(255,255,255,0.9);
-      border-color: rgba(0,0,0,0.08);
-      backdrop-filter: none;
+    body.light .sidebar-brand { border-bottom-color: rgba(0,0,0,0.07) !important; }
+    body.light .brand-name { color: #0f172a !important; }
+    body.light .brand-sub  { color: #94a3b8 !important; }
+    body.light .section-label { color: #94a3b8 !important; }
+    body.light .sidebar-link { color: #475569 !important; }
+    body.light .sidebar-link:hover { background: rgba(0,114,255,0.06) !important; color: #0072ff !important; }
+    body.light .sidebar-link.active {
+      color: #0072ff !important; background: rgba(0,114,255,0.1) !important;
+      border-color: rgba(0,114,255,0.2) !important; box-shadow: none !important;
     }
-    body.light .page-title { color: #1a202c; }
-    body.light .page-sub { color: rgba(0,0,0,0.45); }
-    body.light .stat-num { color: #1a202c; }
-    body.light .stat-label { color: rgba(0,0,0,0.4); }
-    body.light .glow-line { background: linear-gradient(90deg,transparent,rgba(0,114,255,0.3),transparent); }
-    body.light input[type="text"], body.light input[type="number"], body.light textarea {
-      background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.15); color: #1a202c;
+    body.light .nav-icon { background: rgba(0,0,0,0.05) !important; }
+    body.light .sidebar-link.active .nav-icon { background: rgba(0,114,255,0.12) !important; }
+    body.light .sidebar-user { border-top-color: rgba(0,0,0,0.07) !important; }
+    body.light .user-pill { background: #f1f5f9 !important; border-color: rgba(0,0,0,0.08) !important; }
+    body.light .user-pill * { color: #475569 !important; }
+
+    /* Cards */
+    body.light .glass,
+    body.light .glass-card,
+    body.light .stat-card,
+    body.light .topic-card {
+      background: #ffffff !important;
+      border-color: rgba(0,0,0,0.07) !important;
+      backdrop-filter: none !important;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.05) !important;
     }
-    body.light input::placeholder, body.light textarea::placeholder { color: rgba(0,0,0,0.3); }
-    body.light .check-row { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.07); }
-    body.light .check-row:hover { background: rgba(0,114,255,0.06); }
-    body.light .prog-track { background: rgba(0,0,0,0.08); }
-    body.light #particles { opacity: 0.15; }
+    body.light .glass-card:hover,
+    body.light .stat-card:hover {
+      border-color: rgba(0,114,255,0.25) !important;
+      box-shadow: 0 4px 24px rgba(0,114,255,0.1) !important;
+    }
+
+    /* Page headers */
+    body.light .page-title { color: #0f172a !important; }
+    body.light .page-sub   { color: #64748b !important; }
+    body.light .glow-line  { background: linear-gradient(90deg,transparent,rgba(0,114,255,0.25),transparent) !important; }
+
+    /* Stat cards */
+    body.light .stat-num   { color: #0f172a !important; }
+    body.light .stat-label { color: #94a3b8 !important; }
+    body.light .stat-key   { color: #64748b !important; }
+
+    /* Checklist */
+    body.light .check-row {
+      background: #f8faff !important;
+      border-color: rgba(0,0,0,0.07) !important;
+    }
+    body.light .check-row:hover { background: rgba(0,114,255,0.06) !important; border-color: rgba(0,114,255,0.2) !important; }
+    body.light .check-row.done { opacity: 0.45 !important; }
+    body.light .check-row a { color: #1e293b !important; }
+    body.light .check-row a:hover { color: #0072ff !important; }
+
+    /* Force ALL text inside glass-card / stat-card to be readable */
+    body.light .glass-card *:not(.phase-pill):not(.phase-Foundation):not(.phase-Intermediate):not(.phase-Advanced):not(.phase-Pro):not(.stat-num):not(.btn-primary):not(.level-badge):not(.soon-badge):not([style*="color:#4ade80"]):not([style*="color:#f87171"]):not([style*="color:#fb923c"]):not([style*="color:#a78bfa"]):not([style*="color:#00c6ff"]) {
+      color: #334155;
+    }
+    body.light .stat-card *:not(.stat-num):not(.stat-key):not(.level-badge) { color: #64748b; }
+
+    /* Override inline rgba white colors with CSS attribute selector */
+    body.light [style*="color:rgba(255,255,255,0.9)"],
+    body.light [style*="color:rgba(255,255,255,.9)"],
+    body.light [style*="color:#fff"],
+    body.light [style*="color: #fff"] { color: #0f172a !important; }
+    body.light [style*="color:rgba(255,255,255,0.8)"],
+    body.light [style*="color:rgba(255,255,255,0.7)"],
+    body.light [style*="color:rgba(255,255,255,0.6)"],
+    body.light [style*="color:rgba(255,255,255,0.5)"] { color: #334155 !important; }
+    body.light [style*="color:rgba(255,255,255,0.4)"],
+    body.light [style*="color:rgba(255,255,255,0.35)"],
+    body.light [style*="color:rgba(255,255,255,0.3)"],
+    body.light [style*="color:rgba(255,255,255,0.25)"],
+    body.light [style*="color:rgba(255,255,255,0.2)"] { color: #94a3b8 !important; }
+
+    /* Override inline border/background rgba whites */
+    body.light [style*="border-bottom:1px solid rgba(255,255,255,0.05)"] { border-bottom-color: rgba(0,0,0,0.06) !important; }
+    body.light [style*="border:1px solid rgba(255,255,255,0.05)"],
+    body.light [style*="border:1px solid rgba(255,255,255,0.06)"],
+    body.light [style*="border:1px solid rgba(255,255,255,0.07)"],
+    body.light [style*="border:1px solid rgba(255,255,255,0.08)"] { border-color: rgba(0,0,0,0.08) !important; }
+    body.light [style*="background:rgba(255,255,255,0.03)"],
+    body.light [style*="background:rgba(255,255,255,0.04)"],
+    body.light [style*="background:rgba(255,255,255,0.05)"],
+    body.light [style*="background:rgba(255,255,255,0.06)"],
+    body.light [style*="background:rgba(255,255,255,0.07)"],
+    body.light [style*="background:rgba(255,255,255,0.08)"] { background: rgba(0,0,0,0.03) !important; }
+
+    /* Progress bar track */
+    body.light .prog-track { background: rgba(0,0,0,0.07) !important; }
+
+    /* Forms */
+    body.light input[type="text"],
+    body.light input[type="number"],
+    body.light textarea {
+      background: #f8faff !important; border-color: rgba(0,0,0,0.12) !important;
+      color: #0f172a !important;
+    }
+    body.light input::placeholder, body.light textarea::placeholder { color: #94a3b8 !important; }
+    body.light label.field-label { color: #475569 !important; }
+
+    /* Daily focus banner in checklist */
+    body.light [style*="background:rgba(255,255,255,0.03)"][style*="border-left"] { background: rgba(0,0,0,0.03) !important; }
+
+    /* Motiviation/tip cards */
+    body.light [style*="rgba(0,198,255,0.08)"] { background: rgba(0,114,255,0.06) !important; border-color: rgba(0,114,255,0.15) !important; }
+    body.light [style*="rgba(139,92,246,0.08)"] { background: rgba(139,92,246,0.06) !important; }
+    body.light #daily-quote { color: #334155 !important; }
+    body.light #daily-tip   { color: #475569 !important; }
+
+    /* Particles */
+    body.light #particles { opacity: 0.08; }
+
+    /* Summary modal */
+    body.light #summary-modal > div { background: #fff; border-color: rgba(0,0,0,0.1); }
+
+    /* Topic card quiz button */
+    body.light .check-row + * { background: #f8faff; }
+
+    /* Analytics */
+    body.light #page-analytics * { color: #334155; }
+    body.light #page-analytics .stat-num { color: #0f172a !important; }
 
     /* theme toggle button */
     #theme-toggle {
       position: fixed; bottom: 28px; left: 260px;
-      width: 38px; height: 38px; border-radius: 50%;
-      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18);
       cursor: pointer; display: flex; align-items: center; justify-content: center;
-      z-index: 200; transition: all 0.2s; font-size: 1rem;
+      z-index: 200; transition: all 0.25s; font-size: 1.1rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
     }
-    body.light #theme-toggle { background: rgba(0,0,0,0.07); border-color: rgba(0,0,0,0.15); }
-    #theme-toggle:hover { transform: scale(1.1); }
+    body.light #theme-toggle {
+      background: #fff !important; border-color: rgba(0,0,0,0.1) !important;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.12) !important;
+    }
+    #theme-toggle:hover { transform: scale(1.12); }
 
     /* ── ANALYTICS ── */
     .cal-grid { display: grid; grid-template-columns: repeat(30,1fr); gap: 3px; }
@@ -1177,27 +1276,41 @@ async function renderDashboard() {
     const createdAt = new Date(topic.createdAt || Date.now());
     const dayNum = Math.min(Math.max(1, Math.floor((Date.now() - createdAt) / 86400000) + 1), topic.days || 30);
 
+    const T = {
+      title:    tc('#fff',          '#0f172a'),
+      body:     tc('rgba(255,255,255,0.8)', '#334155'),
+      sub:      tc('rgba(255,255,255,0.35)', '#64748b'),
+      faint:    tc('rgba(255,255,255,0.25)', '#94a3b8'),
+      divider:  tc('rgba(255,255,255,0.05)', 'rgba(0,0,0,0.07)'),
+      chipBg:   tc('rgba(255,255,255,0.05)', 'rgba(0,0,0,0.05)'),
+      chipBdr:  tc('rgba(255,255,255,0.07)', 'rgba(0,0,0,0.08)'),
+      focusBg:  tc('rgba(255,255,255,0.03)', 'rgba(0,0,0,0.03)'),
+      quizBg:   tc('rgba(255,255,255,0.04)', '#f8faff'),
+      quizBdr:  tc('rgba(255,255,255,0.08)', 'rgba(0,0,0,0.08)'),
+      quizTxt:  tc('rgba(255,255,255,0.5)',  '#64748b'),
+    };
+
     html += `
-      <div style="${ti < topics.length-1 ? 'margin-bottom:22px;padding-bottom:22px;border-bottom:1px solid rgba(255,255,255,0.05);' : ''}">
+      <div style="${ti < topics.length-1 ? `margin-bottom:22px;padding-bottom:22px;border-bottom:1px solid ${T.divider};` : ''}">
         <!-- Topic header -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <span style="width:8px;height:8px;border-radius:50%;background:${topic.color};box-shadow:0 0 8px ${topic.color};flex-shrink:0;"></span>
-            <span style="font-weight:700;color:#fff;font-size:0.875rem;">${topic.name}</span>
+            <span style="font-weight:700;color:${T.title};font-size:0.875rem;">${topic.name}</span>
             <span style="font-size:0.65rem;padding:2px 8px;border-radius:20px;font-weight:700;
               background:${phaseColor}18;color:${phaseColor};border:1px solid ${phaseColor}33;">${phase}</span>
-            <span style="font-size:0.65rem;color:rgba(255,255,255,0.25);background:rgba(255,255,255,0.05);
-              padding:2px 7px;border-radius:10px;border:1px solid rgba(255,255,255,0.07);">
+            <span style="font-size:0.65rem;color:${T.faint};background:${T.chipBg};
+              padding:2px 7px;border-radius:10px;border:1px solid ${T.chipBdr};">
               Day ${dayNum} / ${topic.days}
             </span>
           </div>
-          <span style="font-size:0.75rem;font-weight:700;color:${pct===100?'#4ade80':'rgba(255,255,255,0.3)'};">
+          <span style="font-size:0.75rem;font-weight:700;color:${pct===100?'#4ade80':T.faint};">
             ${pct===100 ? '✓ Done' : pct+'%'}
           </span>
         </div>
         <!-- Daily focus -->
-        <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-bottom:10px;
-          padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.03);
+        <div style="font-size:0.72rem;color:${T.sub};margin-bottom:10px;
+          padding:6px 10px;border-radius:8px;background:${T.focusBg};
           border-left:2px solid ${phaseColor};display:flex;align-items:center;gap:6px;">
           <span>📌</span> <span>${focus}</span>
         </div>
@@ -1208,17 +1321,18 @@ async function renderDashboard() {
       const key = checkKey(topic.id, i);
       const checked = !!state.checked[key];
       const uid = `chk_${topic.id}_${i}`;
+      const taskColor = checked ? T.faint : T.body;
       const learnUrl = `learn.html?topic=${encodeURIComponent(topic.name)}&task=${encodeURIComponent(task)}&color=${encodeURIComponent(topic.color)}&day=${dayNum}&totalDays=${topic.days||30}&hours=${topic.hours||1.5}&ti=${ti}&i=${i}`;
       html += `
           <div class="check-row ${checked ? 'done' : ''}">
             <input type="checkbox" id="${uid}" ${checked ? 'checked' : ''}
               onchange="toggleCheck('${key}', this.checked)" onclick="event.stopPropagation()" />
             <a href="${learnUrl}"
-              style="font-size:0.82rem;color:${checked?'rgba(255,255,255,0.3)':'rgba(255,255,255,0.8)'};
+              style="font-size:0.82rem;color:${taskColor};
               flex:1;text-decoration:none;${checked?'text-decoration:line-through;':''}
               transition:color 0.15s;display:flex;align-items:center;gap:6px;"
               onmouseover="if(!this.closest('.check-row').classList.contains('done'))this.style.color='${topic.color}'"
-              onmouseout="this.style.color='${checked?'rgba(255,255,255,0.3)':'rgba(255,255,255,0.8)'}'">
+              onmouseout="this.style.color='${taskColor}'">
               ${task}
               ${!checked?`<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="opacity:0.3;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>`:''}
             </a>
@@ -1234,10 +1348,10 @@ async function renderDashboard() {
         </div>
         <a href="${quizUrl}" style="display:flex;align-items:center;justify-content:center;gap:7px;
           padding:9px;border-radius:10px;text-decoration:none;font-size:0.8rem;font-weight:700;
-          background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
-          color:rgba(255,255,255,0.5);transition:all 0.2s;width:100%;"
+          background:${T.quizBg};border:1px solid ${T.quizBdr};
+          color:${T.quizTxt};transition:all 0.2s;width:100%;"
           onmouseover="this.style.background='${topic.color}18';this.style.borderColor='${topic.color}44';this.style.color='${topic.color}'"
-          onmouseout="this.style.background='rgba(255,255,255,0.04)';this.style.borderColor='rgba(255,255,255,0.08)';this.style.color='rgba(255,255,255,0.5)'">
+          onmouseout="this.style.background='${T.quizBg}';this.style.borderColor='${T.quizBdr}';this.style.color='${T.quizTxt}'">
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
           </svg>
@@ -1586,6 +1700,20 @@ function logout() {
 }
 
 // ── THEME ────────────────────────────────────────────
+function isLight() { return document.body.classList.contains('light'); }
+
+// Theme-aware color helpers used in render functions
+function tc(darkVal, lightVal) { return isLight() ? lightVal : darkVal; }
+function tca(darkOpacity, lightOpacity) {
+  return isLight()
+    ? `rgba(0,0,0,${lightOpacity})`
+    : `rgba(255,255,255,${darkOpacity})`;
+}
+function cardBg()    { return isLight() ? '#ffffff'              : 'rgba(255,255,255,0.03)'; }
+function cardBorder(){ return isLight() ? 'rgba(0,0,0,0.07)'    : 'rgba(255,255,255,0.05)'; }
+function subBg()     { return isLight() ? 'rgba(0,0,0,0.03)'    : 'rgba(255,255,255,0.03)'; }
+function subBorder() { return isLight() ? 'rgba(0,0,0,0.07)'    : 'rgba(255,255,255,0.07)'; }
+
 function applyTheme(theme) {
   if (theme === 'light') {
     document.body.classList.add('light');
@@ -1596,9 +1724,10 @@ function applyTheme(theme) {
   }
 }
 function toggleTheme() {
-  const next = document.body.classList.contains('light') ? 'dark' : 'light';
+  const next = isLight() ? 'dark' : 'light';
   localStorage.setItem('aicare_theme', next);
   applyTheme(next);
+  renderDashboard();
 }
 applyTheme(localStorage.getItem('aicare_theme') || 'dark');
 
