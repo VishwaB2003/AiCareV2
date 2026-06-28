@@ -224,6 +224,47 @@
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+
+    /* ── POMODORO ── */
+    .pomo-widget {
+      position: fixed; bottom: 28px; right: 28px;
+      background: rgba(10,10,26,0.92);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px; padding: 20px 22px;
+      z-index: 500; width: 220px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+      transition: transform 0.3s, opacity 0.3s;
+    }
+    .pomo-widget.minimized { transform: translateY(calc(100% - 48px)); }
+    .pomo-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px; cursor: pointer;
+    }
+    .pomo-title { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
+    .pomo-mode { font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+    .pomo-mode.work  { background: rgba(0,198,255,0.15); color: #00c6ff; border: 1px solid rgba(0,198,255,0.3); }
+    .pomo-mode.break { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+
+    .pomo-ring { display: flex; justify-content: center; margin-bottom: 14px; }
+    .pomo-ring svg { transform: rotate(-90deg); }
+    .pomo-ring-bg  { fill: none; stroke: rgba(255,255,255,0.07); stroke-width: 6; }
+    .pomo-ring-fg  { fill: none; stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+    .pomo-time-text { font-size: 1.4rem; font-weight: 800; fill: #fff; dominant-baseline: middle; text-anchor: middle; }
+    .pomo-session   { font-size: 0.6rem; fill: rgba(255,255,255,0.3); dominant-baseline: middle; text-anchor: middle; }
+
+    .pomo-controls { display: flex; gap: 8px; }
+    .pomo-btn {
+      flex: 1; padding: 9px; border-radius: 10px; border: none;
+      cursor: pointer; font-size: 0.78rem; font-weight: 700; transition: all 0.2s;
+    }
+    .pomo-btn.start  { background: linear-gradient(135deg,#00c6ff,#0072ff); color: #fff; }
+    .pomo-btn.start:hover { opacity: 0.85; }
+    .pomo-btn.reset  { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.1); }
+    .pomo-btn.reset:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .pomo-sessions { text-align: center; margin-top: 12px; font-size: 0.7rem; color: rgba(255,255,255,0.25); }
+    .pomo-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin: 0 2px; background: rgba(255,255,255,0.1); }
+    .pomo-dot.done { background: #00c6ff; }
   </style>
 </head>
 <body>
@@ -664,6 +705,134 @@ function showToast(msg) {
 
 // ── START ─────────────────────────────────────────────
 loadContent();
+</script>
+
+<!-- ── POMODORO WIDGET ── -->
+<div class="pomo-widget" id="pomo">
+  <div class="pomo-header" onclick="togglePomoMinimize()">
+    <span class="pomo-title">🍅 Pomodoro</span>
+    <span class="pomo-mode work" id="pomo-mode">Focus</span>
+  </div>
+
+  <div class="pomo-ring">
+    <svg width="110" height="110" viewBox="0 0 110 110">
+      <circle class="pomo-ring-bg" cx="55" cy="55" r="46"/>
+      <circle class="pomo-ring-fg" id="pomo-ring-fg" cx="55" cy="55" r="46"
+        stroke="#00c6ff"
+        stroke-dasharray="289"
+        stroke-dashoffset="0"/>
+      <text class="pomo-time-text" id="pomo-display" x="55" y="52">25:00</text>
+      <text class="pomo-session" id="pomo-session-label" x="55" y="68">ready</text>
+    </svg>
+  </div>
+
+  <div class="pomo-controls">
+    <button class="pomo-btn start" id="pomo-start-btn" onclick="togglePomo()">▶ Start</button>
+    <button class="pomo-btn reset" onclick="resetPomo()">↺</button>
+  </div>
+
+  <div class="pomo-sessions" id="pomo-dots"></div>
+</div>
+
+<script>
+// ── POMODORO LOGIC ────────────────────────────────────
+const POMO_WORK  = 25 * 60;
+const POMO_BREAK =  5 * 60;
+const CIRCUMFERENCE = 2 * Math.PI * 46; // ≈ 289
+
+let pomoRunning = false, pomoInterval = null;
+let pomoIsWork = true, pomoRemaining = POMO_WORK, pomoSessions = 0;
+let pomoMinimized = false;
+
+const fgEl    = document.getElementById('pomo-ring-fg');
+const dispEl  = document.getElementById('pomo-display');
+const modeEl  = document.getElementById('pomo-mode');
+const sessEl  = document.getElementById('pomo-session-label');
+const dotsEl  = document.getElementById('pomo-dots');
+const startBtn = document.getElementById('pomo-start-btn');
+const pomoWidget = document.getElementById('pomo');
+
+fgEl.style.strokeDasharray = CIRCUMFERENCE;
+updatePomoUI();
+
+function togglePomoMinimize() {
+  pomoMinimized = !pomoMinimized;
+  pomoWidget.classList.toggle('minimized', pomoMinimized);
+}
+
+function togglePomo() {
+  if (pomoRunning) {
+    clearInterval(pomoInterval);
+    pomoRunning = false;
+    startBtn.textContent = '▶ Resume';
+  } else {
+    pomoRunning = true;
+    startBtn.textContent = '⏸ Pause';
+    pomoInterval = setInterval(() => {
+      pomoRemaining--;
+      if (pomoRemaining <= 0) {
+        clearInterval(pomoInterval);
+        pomoRunning = false;
+        if (pomoIsWork) {
+          pomoSessions++;
+          pomoIsWork = false;
+          pomoRemaining = POMO_BREAK;
+          notify('Break time! 5 minutes to rest. 🌿');
+        } else {
+          pomoIsWork = true;
+          pomoRemaining = POMO_WORK;
+          notify('Focus time! Back to work. 🍅');
+        }
+        updatePomoUI();
+        // Auto-start next
+        togglePomo();
+        return;
+      }
+      updatePomoUI();
+    }, 1000);
+  }
+}
+
+function resetPomo() {
+  clearInterval(pomoInterval);
+  pomoRunning = false;
+  pomoIsWork = true;
+  pomoRemaining = POMO_WORK;
+  startBtn.textContent = '▶ Start';
+  updatePomoUI();
+}
+
+function updatePomoUI() {
+  const total = pomoIsWork ? POMO_WORK : POMO_BREAK;
+  const ratio = pomoRemaining / total;
+  const offset = CIRCUMFERENCE * (1 - ratio);
+  fgEl.style.strokeDashoffset = offset;
+  fgEl.style.stroke = pomoIsWork ? '#00c6ff' : '#4ade80';
+  dispEl.textContent = fmt(pomoRemaining);
+  modeEl.textContent = pomoIsWork ? 'Focus' : 'Break';
+  modeEl.className = 'pomo-mode ' + (pomoIsWork ? 'work' : 'break');
+  sessEl.textContent = pomoIsWork ? (pomoRunning ? 'focusing…' : 'ready') : 'rest 🌿';
+
+  // Session dots (max 4 per set)
+  const dots = Array.from({length: Math.min(pomoSessions, 4)}, (_, i) =>
+    `<span class="pomo-dot done"></span>`).join('') +
+    Array.from({length: Math.max(0, 4 - pomoSessions)}, () =>
+    `<span class="pomo-dot"></span>`).join('');
+  dotsEl.innerHTML = `${dots}<br><span style="font-size:0.65rem;">${pomoSessions} session${pomoSessions!==1?'s':''} done</span>`;
+}
+
+function fmt(s) {
+  return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+}
+
+function notify(msg) {
+  if (Notification.permission === 'granted') {
+    new Notification('AiCare Pomodoro', { body: msg, icon: '' });
+  }
+}
+
+// Request notification permission
+if (Notification.permission === 'default') Notification.requestPermission();
 </script>
 </body>
 </html>

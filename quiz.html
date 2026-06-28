@@ -314,10 +314,22 @@ function nextQuestion() {
 }
 
 // ── Result screen ─────────────────────────────────────────────────────────────
+function saveQuizHistory(passed) {
+  const history = JSON.parse(localStorage.getItem('aicare_quiz_history') || '[]');
+  history.push({
+    topic: TOPIC, score, day: DAY,
+    date: todayKey(), passed
+  });
+  // keep last 50
+  if (history.length > 50) history.splice(0, history.length - 50);
+  localStorage.setItem('aicare_quiz_history', JSON.stringify(history));
+}
+
 function showResult() {
   const passed = score >= 4;
   const phaseColor = COLOR;
 
+  saveQuizHistory(passed);
   if (passed) markTopicDone();
 
   const banner = passed
