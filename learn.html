@@ -302,6 +302,7 @@
       <div class="task-label" style="margin-bottom:0;">Today's Task</div>
       <span id="phase-pill" class="phase-pill phase-Foundation">Foundation</span>
       <span style="font-size:0.72rem;color:rgba(255,255,255,0.3);" id="day-label">Day 1 of 30</span>
+      <span id="hero-date" style="font-size:0.7rem;color:rgba(255,255,255,0.2);margin-left:auto;"></span>
     </div>
     <div class="task-title" id="hero-task">Loading…</div>
     <div style="display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap;">
@@ -422,8 +423,18 @@
           </div>
           <div style="height:1px;background:rgba(255,255,255,0.05);"></div>
           <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:0.8rem;color:rgba(255,255,255,0.4);">Day</span>
+            <span id="qs-day" style="font-size:0.8rem;font-weight:700;color:#00c6ff;">—</span>
+          </div>
+          <div style="height:1px;background:rgba(255,255,255,0.05);"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:0.8rem;color:rgba(255,255,255,0.4);">Streak</span>
+            <span id="qs-streak" style="font-size:0.8rem;font-weight:700;color:#fb923c;">—</span>
+          </div>
+          <div style="height:1px;background:rgba(255,255,255,0.05);"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
             <span style="font-size:0.8rem;color:rgba(255,255,255,0.4);">Points if done</span>
-            <span style="font-size:0.8rem;font-weight:700;color:#4ade80;">+10 pts</span>
+            <span id="qs-pts" style="font-size:0.8rem;font-weight:700;color:#4ade80;">+10 pts</span>
           </div>
         </div>
       </div>
@@ -479,9 +490,13 @@ const params    = new URLSearchParams(location.search);
 const TOPIC     = decodeURIComponent(params.get('topic') || 'Study Topic');
 const TASK      = decodeURIComponent(params.get('task')  || 'Today\'s Task');
 const COLOR     = params.get('color') || '#00c6ff';
-const DAY       = parseInt(params.get('day')       || '1');
-const TOTAL_DAYS= parseInt(params.get('totalDays') || '30');
-const HOURS     = parseFloat(params.get('hours')   || '1.5');
+const TOPIC_ID  = parseInt(params.get('topicId') || '0');
+const TASK_IDX  = parseInt(params.get('taskIdx') || params.get('i') || '0');
+
+// Mutable — overwritten by real DB data on load
+let DAY        = parseInt(params.get('day')       || '1');
+let TOTAL_DAYS = parseInt(params.get('totalDays') || '30');
+let HOURS      = parseFloat(params.get('hours')   || '1.5');
 
 // ── AUTH ──────────────────────────────────────────────
 const sess = JSON.parse(localStorage.getItem('aicare_session') || '{}');
@@ -500,30 +515,6 @@ function getPhase(day, total) {
   return 'Pro';
 }
 
-// ── INIT UI ───────────────────────────────────────────
-const PHASE = getPhase(DAY, TOTAL_DAYS);
-const TOTAL_PCT = Math.round(DAY / TOTAL_DAYS * 100);
-
-document.getElementById('bc-topic').textContent = TOPIC;
-document.getElementById('bc-task').textContent  = TASK;
-document.getElementById('hero-task').textContent  = TASK;
-document.getElementById('hero-topic').textContent = TOPIC;
-document.getElementById('topic-dot').style.background = COLOR;
-document.getElementById('day-label').textContent = `Day ${DAY} of ${TOTAL_DAYS}`;
-document.getElementById('qs-topic').textContent = TOPIC;
-document.getElementById('qs-task').textContent  = TASK;
-
-// Phase pill
-const phasePill = document.getElementById('phase-pill');
-phasePill.textContent = PHASE;
-phasePill.className = `phase-pill phase-${PHASE}`;
-
-// Progress bar
-setTimeout(() => {
-  document.getElementById('progress-fill').style.width = TOTAL_PCT + '%';
-  document.getElementById('progress-pct').textContent  = TOTAL_PCT + '%';
-}, 200);
-
 const TIPS = [
   "Use the Pomodoro technique: 25 min focus, 5 min break.",
   "Teach what you learn — explaining it cements understanding.",
@@ -534,8 +525,8 @@ const TIPS = [
 ];
 document.getElementById('tip-text').textContent = TIPS[new Date().getDate() % TIPS.length];
 
-// ── NOTES ─────────────────────────────────────────────
-const notesKey = `notes_${TOPIC}_${TASK}`;
+// ── NOTES (localStorage) ──────────────────────────────
+const notesKey = `notes_${TOPIC_ID || TOPIC}_${TASK_IDX}`;
 document.getElementById('notes-area').value = localStorage.getItem(notesKey) || '';
 
 function saveNotes() {
@@ -548,24 +539,128 @@ document.getElementById('notes-area').addEventListener('input', () => {
   window._notesTimer = setTimeout(saveNotes, 1500);
 });
 
-// ── MARK DONE ─────────────────────────────────────────
-const doneKey = `done_${TOPIC}_${TASK}_${new Date().toISOString().slice(0,10)}`;
-if (localStorage.getItem(doneKey)) {
-  const btn = document.getElementById('done-btn');
-  btn.classList.add('marked');
-  btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Completed Today ✓`;
+// ── APPLY UI STATE ────────────────────────────────────
+function applyUI(day, totalDays, isTaskDone, stats) {
+  const PHASE = getPhase(day, totalDays);
+  const TOTAL_PCT = Math.round(day / totalDays * 100);
+
+  const todayLabel = new Date().toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+
+  document.getElementById('bc-topic').textContent   = TOPIC;
+  document.getElementById('bc-task').textContent    = TASK;
+  document.getElementById('hero-task').textContent  = TASK;
+  document.getElementById('hero-topic').textContent = TOPIC;
+  document.getElementById('topic-dot').style.background = COLOR;
+  document.getElementById('day-label').textContent  = `Day ${day} of ${totalDays}`;
+  document.getElementById('hero-date').textContent  = todayLabel;
+  document.getElementById('qs-topic').textContent   = TOPIC;
+  document.getElementById('qs-task').textContent    = TASK;
+  document.getElementById('qs-day').textContent     = `Day ${day} / ${totalDays}`;
+  document.getElementById('qs-streak').textContent  =
+    stats && stats.currentStreak ? `🔥 ${stats.currentStreak} day${stats.currentStreak !== 1 ? 's' : ''}` : '—';
+
+  const phasePill = document.getElementById('phase-pill');
+  phasePill.textContent = PHASE;
+  phasePill.className = `phase-pill phase-${PHASE}`;
+
+  setTimeout(() => {
+    document.getElementById('progress-fill').style.width = TOTAL_PCT + '%';
+    document.getElementById('progress-pct').textContent  = TOTAL_PCT + '%';
+  }, 200);
+
+  if (isTaskDone) setDoneState(false);
 }
 
-function markDone() {
-  localStorage.setItem(doneKey, '1');
+// ── MARK DONE (calls backend) ─────────────────────────
+function setDoneState(animate = true) {
   const btn = document.getElementById('done-btn');
   btn.classList.add('marked');
+  btn.disabled = false;
   btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Completed Today ✓`;
-  showToast('Great work! +10 pts earned 🎉');
+  if (animate) showToast('Great work! +10 pts earned 🎉');
 }
 
-// ── LOAD AI CONTENT ───────────────────────────────────
+async function markDone() {
+  const btn = document.getElementById('done-btn');
+  if (btn.classList.contains('marked')) return;
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  const today = new Date().toISOString().slice(0, 10);
+  const doneKey = `done_${TOPIC_ID || TOPIC}_${TASK_IDX}_${today}`;
+
+  try {
+    if (TOPIC_ID > 0) {
+      const res = await fetch('http://localhost:8080/api/study/check', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ topicId: TOPIC_ID, taskIndex: TASK_IDX, checked: true })
+      });
+      if (!res.ok) throw new Error();
+    }
+    localStorage.setItem(doneKey, '1');
+  } catch {
+    // backend unreachable — still mark locally
+    localStorage.setItem(doneKey, '1');
+  }
+
+  setDoneState(true);
+}
+
+// ── INIT — fetch dashboard for real data ──────────────
+async function initPage() {
+  // Show breadcrumb immediately from URL params while we fetch
+  document.getElementById('bc-topic').textContent   = TOPIC;
+  document.getElementById('bc-task').textContent    = TASK;
+  document.getElementById('hero-task').textContent  = TASK;
+  document.getElementById('hero-topic').textContent = TOPIC;
+  document.getElementById('topic-dot').style.background = COLOR;
+
+  try {
+    const res = await fetch('http://localhost:8080/api/study/dashboard', {
+      headers: authHeaders()
+    });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+
+    // Find the topic by ID
+    const topic = (data.topics || []).find(t => t.id === TOPIC_ID);
+    const checkedToday = ((data.checkedTasks || {})[TOPIC_ID]) || [];
+    const stats = data.stats || {};
+
+    if (topic) {
+      const createdAt = new Date(topic.createdAt || Date.now());
+      DAY        = Math.min(Math.max(1, Math.floor((Date.now() - createdAt) / 86400000) + 1), topic.totalDays || 30);
+      TOTAL_DAYS = topic.totalDays || 30;
+      HOURS      = topic.dailyHours || 1.5;
+    }
+
+    const isTaskDone = checkedToday.includes(TASK_IDX);
+    applyUI(DAY, TOTAL_DAYS, isTaskDone, stats);
+
+  } catch {
+    // Fallback: use URL param values + localStorage done state
+    const today = new Date().toISOString().slice(0, 10);
+    const isDoneFallback = !!localStorage.getItem(`done_${TOPIC_ID || TOPIC}_${TASK_IDX}_${today}`)
+                        || !!localStorage.getItem(`done_${TOPIC}_${TASK}_${today}`);
+    applyUI(DAY, TOTAL_DAYS, isDoneFallback, null);
+  }
+
+  // AI content loads after DB state is set
+  loadContent();
+}
+
+// ── LOAD AI CONTENT (cached per topic+task+day) ───────
 async function loadContent() {
+  const today = new Date().toISOString().slice(0, 10);
+  const cacheKey = `explain_${TOPIC_ID || TOPIC}_${TASK_IDX}_${today}`;
+
+  // Show cached content instantly if available
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) {
+    try { renderContent(JSON.parse(cached)); return; } catch {}
+  }
+
   try {
     const res = await fetch('http://localhost:8080/api/ai/explain', {
       method: 'POST',
@@ -574,8 +669,9 @@ async function loadContent() {
     });
     if (!res.ok) throw new Error('API error');
     const data = await res.json();
+    if (data.aiGenerated) localStorage.setItem(cacheKey, JSON.stringify(data));
     renderContent(data);
-  } catch (e) {
+  } catch {
     renderFallback();
   }
 }
@@ -704,7 +800,7 @@ function showToast(msg) {
 }
 
 // ── START ─────────────────────────────────────────────
-loadContent();
+initPage();
 </script>
 
 <!-- ── POMODORO WIDGET ── -->
@@ -740,20 +836,29 @@ const POMO_WORK  = 25 * 60;
 const POMO_BREAK =  5 * 60;
 const CIRCUMFERENCE = 2 * Math.PI * 46; // ≈ 289
 
+// Persist sessions per topic per day
+const _pomoToday = new Date().toISOString().slice(0, 10);
+const _pomoKey   = `pomo_sessions_${TOPIC_ID || TOPIC}_${_pomoToday}`;
+
 let pomoRunning = false, pomoInterval = null;
-let pomoIsWork = true, pomoRemaining = POMO_WORK, pomoSessions = 0;
+let pomoIsWork  = true, pomoRemaining = POMO_WORK;
+let pomoSessions = parseInt(localStorage.getItem(_pomoKey) || '0');
 let pomoMinimized = false;
 
-const fgEl    = document.getElementById('pomo-ring-fg');
-const dispEl  = document.getElementById('pomo-display');
-const modeEl  = document.getElementById('pomo-mode');
-const sessEl  = document.getElementById('pomo-session-label');
-const dotsEl  = document.getElementById('pomo-dots');
+const fgEl     = document.getElementById('pomo-ring-fg');
+const dispEl   = document.getElementById('pomo-display');
+const modeEl   = document.getElementById('pomo-mode');
+const sessEl   = document.getElementById('pomo-session-label');
+const dotsEl   = document.getElementById('pomo-dots');
 const startBtn = document.getElementById('pomo-start-btn');
 const pomoWidget = document.getElementById('pomo');
 
 fgEl.style.strokeDasharray = CIRCUMFERENCE;
 updatePomoUI();
+
+function savePomodoroSessions() {
+  localStorage.setItem(_pomoKey, pomoSessions);
+}
 
 function togglePomoMinimize() {
   pomoMinimized = !pomoMinimized;
@@ -775,6 +880,7 @@ function togglePomo() {
         pomoRunning = false;
         if (pomoIsWork) {
           pomoSessions++;
+          savePomodoroSessions();   // persist to localStorage
           pomoIsWork = false;
           pomoRemaining = POMO_BREAK;
           notify('Break time! 5 minutes to rest. 🌿');
@@ -784,8 +890,7 @@ function togglePomo() {
           notify('Focus time! Back to work. 🍅');
         }
         updatePomoUI();
-        // Auto-start next
-        togglePomo();
+        togglePomo(); // auto-start next
         return;
       }
       updatePomoUI();
@@ -796,33 +901,33 @@ function togglePomo() {
 function resetPomo() {
   clearInterval(pomoInterval);
   pomoRunning = false;
-  pomoIsWork = true;
+  pomoIsWork  = true;
   pomoRemaining = POMO_WORK;
   startBtn.textContent = '▶ Start';
   updatePomoUI();
 }
 
 function updatePomoUI() {
-  const total = pomoIsWork ? POMO_WORK : POMO_BREAK;
-  const ratio = pomoRemaining / total;
+  const total  = pomoIsWork ? POMO_WORK : POMO_BREAK;
+  const ratio  = pomoRemaining / total;
   const offset = CIRCUMFERENCE * (1 - ratio);
   fgEl.style.strokeDashoffset = offset;
   fgEl.style.stroke = pomoIsWork ? '#00c6ff' : '#4ade80';
   dispEl.textContent = fmt(pomoRemaining);
   modeEl.textContent = pomoIsWork ? 'Focus' : 'Break';
-  modeEl.className = 'pomo-mode ' + (pomoIsWork ? 'work' : 'break');
+  modeEl.className   = 'pomo-mode ' + (pomoIsWork ? 'work' : 'break');
   sessEl.textContent = pomoIsWork ? (pomoRunning ? 'focusing…' : 'ready') : 'rest 🌿';
 
-  // Session dots (max 4 per set)
-  const dots = Array.from({length: Math.min(pomoSessions, 4)}, (_, i) =>
-    `<span class="pomo-dot done"></span>`).join('') +
-    Array.from({length: Math.max(0, 4 - pomoSessions)}, () =>
-    `<span class="pomo-dot"></span>`).join('');
-  dotsEl.innerHTML = `${dots}<br><span style="font-size:0.65rem;">${pomoSessions} session${pomoSessions!==1?'s':''} done</span>`;
+  // Session dots — show up to 4 filled, then cycle
+  const shown = Math.min(pomoSessions % 4 || (pomoSessions > 0 ? 4 : 0), 4);
+  const dots  = Array.from({length: shown}, () => `<span class="pomo-dot done"></span>`).join('')
+              + Array.from({length: 4 - shown}, () => `<span class="pomo-dot"></span>`).join('');
+  const todayLabel = new Date().toLocaleDateString('en-US', { month:'short', day:'numeric' });
+  dotsEl.innerHTML = `${dots}<br><span style="font-size:0.65rem;">${pomoSessions} session${pomoSessions !== 1 ? 's' : ''} done today (${todayLabel})</span>`;
 }
 
 function fmt(s) {
-  return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 }
 
 function notify(msg) {
@@ -831,7 +936,6 @@ function notify(msg) {
   }
 }
 
-// Request notification permission
 if (Notification.permission === 'default') Notification.requestPermission();
 </script>
 </body>

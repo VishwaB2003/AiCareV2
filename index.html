@@ -904,9 +904,9 @@
       </div>
       <div class="glow-line"></div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+      <div style="max-width:680px;">
 
-        <!-- LEFT: Form -->
+        <!-- Form -->
         <div class="glass-card" style="display:flex;flex-direction:column;gap:20px;">
 
           <div>
@@ -971,110 +971,6 @@
           </div>
         </div>
 
-        <!-- RIGHT: Live Preview Panel -->
-        <div style="display:flex;flex-direction:column;gap:16px;">
-
-          <!-- Live topic card preview -->
-          <div class="glass-card" style="padding:20px;">
-            <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
-              color:rgba(255,255,255,0.3);margin-bottom:14px;">Live Preview</div>
-
-            <!-- Preview card -->
-            <div id="preview-card" style="border-radius:14px;padding:18px;transition:all 0.3s;
-              background:linear-gradient(135deg,rgba(0,198,255,0.07),rgba(0,114,255,0.04));
-              border:1px solid rgba(0,198,255,0.2);">
-              <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-                <div id="prev-icon" style="width:38px;height:38px;border-radius:11px;flex-shrink:0;
-                  background:linear-gradient(135deg,rgba(0,198,255,0.3),rgba(0,198,255,0.1));
-                  border:1px solid rgba(0,198,255,0.3);
-                  display:flex;align-items:center;justify-content:center;font-size:1.1rem;">📚</div>
-                <div style="flex:1;min-width:0;">
-                  <div id="prev-name" style="font-weight:700;color:#fff;font-size:0.9rem;
-                    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Your Topic Name</div>
-                  <div id="prev-meta" style="font-size:0.68rem;color:rgba(255,255,255,0.35);margin-top:2px;">
-                    — days · — h/day</div>
-                </div>
-                <span id="prev-phase-pill" style="font-size:0.62rem;font-weight:700;padding:2px 8px;
-                  border-radius:20px;background:rgba(74,222,128,0.15);color:#4ade80;
-                  border:1px solid rgba(74,222,128,0.3);white-space:nowrap;">Foundation</span>
-              </div>
-              <div id="prev-desc" style="font-size:0.75rem;color:rgba(255,255,255,0.35);
-                margin-bottom:12px;display:none;line-height:1.5;"></div>
-              <!-- Phase progress bar -->
-              <div style="margin-bottom:10px;">
-                <div class="prog-track">
-                  <div id="prev-prog" class="prog-fill" style="width:0%;background:linear-gradient(90deg,#00c6ff,#0072ff);"></div>
-                </div>
-                <div style="display:flex;justify-content:space-between;font-size:0.65rem;
-                  color:rgba(255,255,255,0.25);margin-top:5px;">
-                  <span>Day 1</span>
-                  <span id="prev-days-label">30 days total</span>
-                </div>
-              </div>
-              <!-- Sample tasks -->
-              <div id="prev-tasks" style="display:flex;flex-direction:column;gap:5px;"></div>
-            </div>
-          </div>
-
-          <!-- Phase roadmap -->
-          <div class="glass-card" style="padding:20px;">
-            <div style="font-size:0.78rem;font-weight:700;color:#fff;margin-bottom:4px;">📍 Phase Roadmap</div>
-            <div style="font-size:0.68rem;color:rgba(255,255,255,0.3);margin-bottom:16px;">
-              Your learning journey breakdown
-            </div>
-            <div id="prev-phases" style="display:flex;flex-direction:column;gap:10px;">
-              <!-- Filled by updatePreview() -->
-            </div>
-          </div>
-
-          <!-- What you get -->
-          <div class="glass-card" style="padding:20px;background:linear-gradient(135deg,rgba(0,198,255,0.06),rgba(0,114,255,0.03));border-color:rgba(0,198,255,0.15);">
-            <div style="font-size:0.78rem;font-weight:700;color:#00c6ff;margin-bottom:14px;">✨ What you get</div>
-            <div style="display:flex;flex-direction:column;gap:10px;">
-              <div style="display:flex;align-items:center;gap:10px;">
-                <div style="width:32px;height:32px;border-radius:9px;background:rgba(74,222,128,0.12);
-                  border:1px solid rgba(74,222,128,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                  <svg width="13" height="13" fill="none" stroke="#4ade80" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                </div>
-                <div>
-                  <div style="font-size:0.78rem;font-weight:600;color:rgba(255,255,255,0.8);">AI Daily Tasks</div>
-                  <div style="font-size:0.67rem;color:rgba(255,255,255,0.3);">Unique tasks generated every day</div>
-                </div>
-              </div>
-              <div style="display:flex;align-items:center;gap:10px;">
-                <div style="width:32px;height:32px;border-radius:9px;background:rgba(0,198,255,0.12);
-                  border:1px solid rgba(0,198,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                  <svg width="13" height="13" fill="none" stroke="#00c6ff" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                </div>
-                <div>
-                  <div style="font-size:0.78rem;font-weight:600;color:rgba(255,255,255,0.8);">AI Learn Pages</div>
-                  <div style="font-size:0.67rem;color:rgba(255,255,255,0.3);">Deep lessons + YouTube resources per task</div>
-                </div>
-              </div>
-              <div style="display:flex;align-items:center;gap:10px;">
-                <div style="width:32px;height:32px;border-radius:9px;background:rgba(251,146,60,0.12);
-                  border:1px solid rgba(251,146,60,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                  <svg width="13" height="13" fill="none" stroke="#fb923c" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                </div>
-                <div>
-                  <div style="font-size:0.78rem;font-weight:600;color:rgba(255,255,255,0.8);">Daily Quiz</div>
-                  <div style="font-size:0.67rem;color:rgba(255,255,255,0.3);">5 MCQs — pass 4/5 to auto-complete tasks</div>
-                </div>
-              </div>
-              <div style="display:flex;align-items:center;gap:10px;">
-                <div style="width:32px;height:32px;border-radius:9px;background:rgba(139,92,246,0.12);
-                  border:1px solid rgba(139,92,246,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                  <svg width="13" height="13" fill="none" stroke="#a78bfa" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                </div>
-                <div>
-                  <div style="font-size:0.78rem;font-weight:600;color:rgba(255,255,255,0.8);">Streak & Score</div>
-                  <div style="font-size:0.67rem;color:rgba(255,255,255,0.3);">Earn points, build streaks, level up</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
       </div>
     </div>
 
@@ -1385,15 +1281,16 @@ function updatePreview() {
   document.getElementById('prev-prog').style.background =
     `linear-gradient(90deg,${color},${color}99)`;
 
-  // Phase calculation
+  // Phase calculation — real day counts per phase
   const p1 = Math.ceil(days * 0.20);
   const p2 = Math.ceil(days * 0.50);
   const p3 = Math.ceil(days * 0.80);
+  const phaseDayCounts = [p1, p2 - p1, p3 - p2, days - p3];
   const phases = [
-    { name:'Foundation',   days:`Day 1–${p1}`,       color:'#4ade80', pct: 20 },
-    { name:'Intermediate', days:`Day ${p1+1}–${p2}`, color:'#00c6ff', pct: 30 },
-    { name:'Advanced',     days:`Day ${p2+1}–${p3}`, color:'#fb923c', pct: 30 },
-    { name:'Pro',          days:`Day ${p3+1}–${days}`,color:'#a78bfa', pct: 20 },
+    { name:'Foundation',   label:`Day 1 – ${p1}`,          numDays: phaseDayCounts[0], color:'#4ade80' },
+    { name:'Intermediate', label:`Day ${p1+1} – ${p2}`,    numDays: phaseDayCounts[1], color:'#00c6ff' },
+    { name:'Advanced',     label:`Day ${p2+1} – ${p3}`,    numDays: phaseDayCounts[2], color:'#fb923c' },
+    { name:'Pro',          label:`Day ${p3+1} – ${days}`,  numDays: phaseDayCounts[3], color:'#a78bfa' },
   ];
 
   // Phase pill — starts at Foundation
@@ -1403,23 +1300,33 @@ function updatePreview() {
   pill.style.color = '#4ade80';
   pill.style.borderColor = 'rgba(74,222,128,0.3)';
 
-  // Render phase roadmap
-  document.getElementById('prev-phases').innerHTML = phases.map((p, i) => `
+  // Render phase roadmap with dynamic bar widths from actual day counts
+  document.getElementById('prev-phases').innerHTML = phases.map((p, i) => {
+    const barPct = days > 0 ? Math.round((p.numDays / days) * 100) : 0;
+    return `
     <div style="display:flex;align-items:center;gap:10px;">
       <div style="width:28px;height:28px;border-radius:8px;flex-shrink:0;
         background:${p.color}18;border:1px solid ${p.color}33;
         display:flex;align-items:center;justify-content:center;
         font-size:0.65rem;font-weight:800;color:${p.color};">${i+1}</div>
       <div style="flex:1;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
           <span style="font-size:0.78rem;font-weight:700;color:${p.color};">${p.name}</span>
-          <span style="font-size:0.65rem;color:rgba(255,255,255,0.3);">${p.days}</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:0.65rem;font-weight:700;color:${p.color};
+              background:${p.color}15;padding:1px 8px;border-radius:20px;
+              border:1px solid ${p.color}30;">${p.numDays} day${p.numDays !== 1 ? 's' : ''}</span>
+            <span style="font-size:0.6rem;color:rgba(255,255,255,0.2);">${p.label}</span>
+          </div>
         </div>
-        <div style="height:3px;border-radius:99px;background:rgba(255,255,255,0.07);">
-          <div style="height:3px;border-radius:99px;width:${p.pct}%;background:${p.color};"></div>
+        <div style="height:5px;border-radius:99px;background:rgba(255,255,255,0.07);overflow:hidden;">
+          <div style="height:5px;border-radius:99px;width:${barPct}%;
+            background:linear-gradient(90deg,${p.color},${p.color}88);
+            transition:width 0.35s ease;"></div>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   // Sample task chips from subtask inputs
   const inputs = [...document.querySelectorAll('#subtask-list input')].map(i => i.value.trim()).filter(Boolean);
@@ -1603,7 +1510,7 @@ async function renderDashboard() {
       const checked = !!state.checked[key];
       const uid = `chk_${topic.id}_${i}`;
       const taskColor = checked ? T.faint : T.body;
-      const learnUrl = `learn.html?topic=${encodeURIComponent(topic.name)}&task=${encodeURIComponent(task)}&color=${encodeURIComponent(topic.color)}&day=${dayNum}&totalDays=${topic.days||30}&hours=${topic.hours||1.5}&ti=${ti}&i=${i}`;
+      const learnUrl = `learn.html?topic=${encodeURIComponent(topic.name)}&task=${encodeURIComponent(task)}&color=${encodeURIComponent(topic.color)}&day=${dayNum}&totalDays=${topic.days||30}&hours=${topic.hours||1.5}&topicId=${topic.id}&taskIdx=${i}`;
       html += `
           <div class="check-row ${checked ? 'done' : ''}">
             <input type="checkbox" id="${uid}" ${checked ? 'checked' : ''}
