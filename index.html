@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AiCare — Student Companion</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    * { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; }
+
+    body {
+      background: radial-gradient(circle at top, #0a0a1a, #000000);
+      color: #e2e8f0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Particle canvas */
+    #particles {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0; pointer-events: none;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── GLASS UTILITY ── */
+    .glass {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .glass-card {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 24px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .glass-card:hover {
+      border-color: rgba(0,198,255,0.2);
+      box-shadow: 0 0 24px rgba(0,198,255,0.07);
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 240px;
+      position: fixed; height: 100%; left: 0; top: 0;
+      display: flex; flex-direction: column;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255,255,255,0.07);
+      z-index: 100;
+    }
+
+    .sidebar-brand {
+      padding: 22px 20px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .brand-icon {
+      width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 20px rgba(0,198,255,0.4);
+    }
+    .brand-name { font-size: 1rem; font-weight: 800; color: #fff; }
+    .brand-sub  { font-size: 0.7rem; color: rgba(255,255,255,0.35); font-weight: 400; }
+
+    .section-label {
+      font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: rgba(255,255,255,0.25);
+      padding: 18px 16px 6px;
+    }
+
+    .sidebar-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; margin: 1px 8px;
+      border-radius: 10px; cursor: pointer;
+      text-decoration: none; color: rgba(255,255,255,0.45);
+      font-size: 0.84rem; font-weight: 500;
+      transition: all 0.18s ease;
+    }
+    .sidebar-link:hover {
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.85);
+    }
+    .sidebar-link.active {
+      background: linear-gradient(90deg, rgba(0,198,255,0.18), rgba(0,114,255,0.12));
+      color: #00c6ff;
+      border: 1px solid rgba(0,198,255,0.25);
+      box-shadow: 0 0 16px rgba(0,198,255,0.12);
+    }
+    .nav-icon {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: rgba(255,255,255,0.06);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: background 0.18s;
+    }
+    .sidebar-link.active .nav-icon {
+      background: rgba(0,198,255,0.15);
+    }
+    .sidebar-link:hover .nav-icon { background: rgba(255,255,255,0.1); }
+
+    .soon-badge {
+      margin-left: auto; font-size: 0.6rem; font-weight: 700;
+      padding: 2px 7px; border-radius: 20px;
+      background: rgba(0,198,255,0.12); color: #00c6ff;
+      border: 1px solid rgba(0,198,255,0.2);
+    }
+
+    .sidebar-user {
+      padding: 12px 14px 18px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+    .user-pill {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+    .user-avatar {
+      width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.8rem; color: #fff;
+      box-shadow: 0 0 12px rgba(0,198,255,0.3);
+    }
+
+    /* ── MAIN ── */
+    .main { margin-left: 240px; padding: 36px 36px 60px; position: relative; z-index: 1; }
+
+    /* ── PAGE HEADER ── */
+    .page-title { font-size: 1.6rem; font-weight: 800; color: #fff; line-height: 1.2; }
+    .page-sub { font-size: 0.875rem; color: rgba(255,255,255,0.35); margin-top: 4px; }
+
+    /* ── STAT CARDS ── */
+    .stat-card {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 20px 22px;
+      transition: all 0.2s;
+    }
+    .stat-card:hover {
+      border-color: rgba(0,198,255,0.25);
+      box-shadow: 0 0 24px rgba(0,198,255,0.1);
+      transform: translateY(-2px);
+    }
+    .stat-icon {
+      width: 34px; height: 34px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .stat-num { font-size: 2rem; font-weight: 800; color: #fff; line-height: 1; margin-top: 10px; }
+    .stat-label { font-size: 0.72rem; color: rgba(255,255,255,0.3); margin-top: 4px; }
+    .stat-key { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; }
+
+    /* ── CHECKLIST ── */
+    .check-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: all 0.2s; cursor: pointer;
+    }
+    .check-row:hover { background: rgba(0,198,255,0.05); border-color: rgba(0,198,255,0.15); }
+    .check-row.done { opacity: 0.5; }
+    input[type="checkbox"] {
+      width: 16px; height: 16px; border-radius: 5px;
+      accent-color: #00c6ff; cursor: pointer; flex-shrink: 0;
+    }
+
+    /* ── PROGRESS BAR ── */
+    .prog-track {
+      height: 4px; border-radius: 99px;
+      background: rgba(255,255,255,0.07);
+    }
+    .prog-fill {
+      height: 4px; border-radius: 99px;
+      background: linear-gradient(90deg, #00c6ff, #0072ff);
+      transition: width 0.5s ease;
+    }
+
+    /* ── FORM INPUTS ── */
+    input[type="text"], input[type="number"], textarea {
+      width: 100%; padding: 11px 15px; border-radius: 11px;
+      border: 1.5px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05);
+      color: #e2e8f0; font-size: 0.875rem; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      box-sizing: border-box;
+    }
+    input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.2); }
+    input[type="text"]:focus, input[type="number"]:focus, textarea:focus {
+      border-color: #00c6ff;
+      box-shadow: 0 0 0 3px rgba(0,198,255,0.12);
+      background: rgba(0,198,255,0.05);
+    }
+    textarea { resize: none; }
+    label.field-label {
+      display: block; font-size: 0.78rem; font-weight: 600;
+      color: rgba(255,255,255,0.55); margin-bottom: 6px;
+    }
+
+    /* ── BUTTONS ── */
+    .btn-primary {
+      background: linear-gradient(90deg, #00c6ff, #0072ff);
+      color: #fff; border: none; border-radius: 11px;
+      padding: 12px 22px; font-size: 0.875rem; font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+      box-shadow: 0 0 20px rgba(0,198,255,0.3);
+    }
+    .btn-primary:hover {
+      box-shadow: 0 0 30px rgba(0,198,255,0.5);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 11px;
+      padding: 12px 22px; font-size: 0.875rem; font-weight: 500;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.1); color: #fff;
+    }
+
+    /* ── COLOR DOTS ── */
+    .color-dot {
+      width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+      border: 2.5px solid transparent; transition: transform 0.15s, border-color 0.15s;
+    }
+    .color-dot:hover { transform: scale(1.18); }
+    .color-dot.selected { border-color: #fff; transform: scale(1.18); box-shadow: 0 0 10px rgba(0,198,255,0.5); }
+
+    /* ── TOPIC CARD ── */
+    .topic-card {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 20px;
+      transition: all 0.25s;
+    }
+    .topic-card:hover {
+      border-color: rgba(0,198,255,0.25);
+      box-shadow: 0 0 28px rgba(0,198,255,0.1);
+      transform: translateY(-3px);
+    }
+
+    .tag {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 0.68rem; font-weight: 600;
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.5);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    /* ── DELETE BTN ── */
+    .del-btn {
+      width: 28px; height: 28px; border-radius: 8px;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+    }
+    .del-btn:hover { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.3); }
+
+    /* ── DIVIDER ── */
+    .topic-divider { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 18px 0; }
+
+    /* ── EMPTY STATE ── */
+    .empty-icon {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 14px;
+    }
+
+    /* ── SCORE / STREAK CARDS ── */
+    .score-card {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 20px 22px;
+      transition: all 0.2s;
+      position: relative; overflow: hidden;
+    }
+    .score-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: var(--card-glow, transparent);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .score-card:hover::before { opacity: 1; }
+    .score-card:hover { transform: translateY(-2px); }
+
+    /* ── DAY SUMMARY MODAL ── */
+    #summary-modal {
+      position: fixed; inset: 0; z-index: 1000;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+    }
+    #summary-modal.show { display: flex; }
+    .summary-box {
+      background: linear-gradient(135deg, rgba(10,10,30,0.98), rgba(5,5,20,0.98));
+      border: 1px solid rgba(0,198,255,0.2);
+      border-radius: 24px; padding: 36px; width: 480px; max-width: 92vw;
+      box-shadow: 0 0 60px rgba(0,198,255,0.15);
+      animation: slideUp 0.35s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+    @keyframes shimmer {
+      0%   { background-position: -200% 0; }
+      100% { background-position:  200% 0; }
+    }
+
+    /* ── LEVEL BADGE ── */
+    .level-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 0.7rem; font-weight: 700;
+      background: rgba(139,92,246,0.15);
+      border: 1px solid rgba(139,92,246,0.3);
+      color: #a78bfa;
+    }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: 28px; right: 28px;
+      z-index: 999; display: none;
+    }
+    .toast-inner {
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(0,198,255,0.3);
+      box-shadow: 0 0 24px rgba(0,198,255,0.2);
+      color: #fff; padding: 12px 18px; border-radius: 14px;
+      font-size: 0.85rem; font-weight: 500;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* ── GLOW LINE ── */
+    .glow-line {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,198,255,0.4), transparent);
+      margin-bottom: 24px;
+    }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+<!-- Particle Canvas -->
+<canvas id="particles"></canvas>
+
+<div style="display:flex; min-height:100vh;">
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">
+        <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="brand-name">AiCare</div>
+        <div class="brand-sub">Student Companion</div>
+      </div>
+    </div>
+
+    <nav style="flex:1; overflow-y:auto; padding-bottom:8px;">
+      <div class="section-label">Study</div>
+
+      <a class="sidebar-link active" data-page="dashboard" onclick="navigate('dashboard',this); return false;" href="#">
+        <div class="nav-icon">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+        </div>
+        Dashboard
+      </a>
+
+      <a class="sidebar-link" data-page="add-topic" onclick="navigate('add-topic',this); return false;" href="#">
+        <div class="nav-icon">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+          </svg>
+        </div>
+        Add Study Topic
+      </a>
+
+      <a class="sidebar-link" data-page="topics" onclick="navigate('topics',this); return false;" href="#">
+        <div class="nav-icon">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+        </div>
+        My Topics
+      </a>
+
+      <div class="section-label" style="margin-top:10px;">Wellness</div>
+
+      <a class="sidebar-link" style="opacity:0.35; cursor:not-allowed;" onclick="return false;" href="#">
+        <div class="nav-icon">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+          </svg>
+        </div>
+        Health
+        <span class="soon-badge">Soon</span>
+      </a>
+
+      <a class="sidebar-link" style="opacity:0.35; cursor:not-allowed;" onclick="return false;" href="#">
+        <div class="nav-icon">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        Lifestyle
+        <span class="soon-badge">Soon</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-user">
+      <div class="user-pill">
+        <div class="user-avatar">S</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:0.8rem;font-weight:600;color:#fff;">Student</div>
+          <div style="font-size:0.68rem;color:rgba(255,255,255,0.3);">Keep learning 🚀</div>
+        </div>
+        <button onclick="logout()"
+          title="Sign out"
+          style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);
+                 border-radius:8px;width:28px;height:28px;cursor:pointer;display:flex;
+                 align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;"
+          onmouseover="this.style.background='rgba(239,68,68,0.2)';this.style.borderColor='rgba(239,68,68,0.35)'"
+          onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.borderColor='rgba(255,255,255,0.08)'">
+          <svg width="13" height="13" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ MAIN ═══ -->
+  <main class="main" style="width:calc(100% - 240px);min-width:0;">
+
+    <!-- ── DASHBOARD ── -->
+    <div id="page-dashboard" class="page active">
+      <div style="margin-bottom:28px;">
+        <div class="page-title">Good day! 👋</div>
+        <div id="today-date" class="page-sub"></div>
+      </div>
+      <div class="glow-line"></div>
+
+      <!-- Stats row 1 — 4 study cards -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;width:100%;">
+
+        <div class="stat-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span class="stat-key" style="color:rgba(255,255,255,0.3);">Topics</span>
+            <div class="stat-icon" style="background:rgba(0,198,255,0.12);border:1px solid rgba(0,198,255,0.2);">
+              <svg width="14" height="14" fill="none" stroke="#00c6ff" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            </div>
+          </div>
+          <div id="stat-topics" class="stat-num">0</div>
+          <div class="stat-label">active subjects</div>
+        </div>
+
+        <div class="stat-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span class="stat-key" style="color:rgba(255,255,255,0.3);">Today's Tasks</span>
+            <div class="stat-icon" style="background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.25);">
+              <svg width="14" height="14" fill="none" stroke="#818cf8" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            </div>
+          </div>
+          <div id="stat-tasks" class="stat-num">0</div>
+          <div class="stat-label">scheduled today</div>
+        </div>
+
+        <div class="stat-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span class="stat-key" style="color:rgba(255,255,255,0.3);">Completed</span>
+            <div class="stat-icon" style="background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.2);">
+              <svg width="14" height="14" fill="none" stroke="#4ade80" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+          </div>
+          <div id="stat-done" class="stat-num" style="color:#4ade80;">0</div>
+          <div class="stat-label">tasks done today</div>
+        </div>
+
+        <div class="stat-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span class="stat-key" style="color:rgba(255,255,255,0.3);">Study Hours</span>
+            <div class="stat-icon" style="background:rgba(251,146,60,0.12);border:1px solid rgba(251,146,60,0.2);">
+              <svg width="14" height="14" fill="none" stroke="#fb923c" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+          </div>
+          <div id="stat-hours" class="stat-num" style="color:#fb923c;">0</div>
+          <div class="stat-label">hours planned today</div>
+        </div>
+
+      </div>
+
+      <!-- Stats row 2 — Score / Streak / Level -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px;width:100%;">
+
+        <!-- Score -->
+        <div class="score-card" style="--card-glow:linear-gradient(135deg,rgba(0,198,255,0.06),rgba(0,114,255,0.04));
+             border-color:rgba(0,198,255,0.15);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <span class="stat-key" style="color:rgba(0,198,255,0.6);">Total Score</span>
+            <div style="font-size:1.3rem;">🎯</div>
+          </div>
+          <div id="stat-score" class="stat-num" style="color:#00c6ff;font-size:2.2rem;">0</div>
+          <div style="margin-top:8px;">
+            <div style="display:flex;justify-content:space-between;font-size:0.67rem;margin-bottom:5px;">
+              <span style="color:rgba(255,255,255,0.25);">Next level</span>
+              <span id="stat-pts-next" style="color:rgba(0,198,255,0.6);font-weight:600;">100 pts</span>
+            </div>
+            <div style="height:3px;border-radius:99px;background:rgba(255,255,255,0.07);">
+              <div id="score-bar" style="height:3px;border-radius:99px;width:0%;
+                background:linear-gradient(90deg,#00c6ff,#0072ff);transition:width 0.6s ease;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Streak -->
+        <div class="score-card" style="--card-glow:linear-gradient(135deg,rgba(251,146,60,0.07),rgba(239,68,68,0.04));
+             border-color:rgba(251,146,60,0.2);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <span class="stat-key" style="color:rgba(251,146,60,0.7);">Streak</span>
+            <div style="font-size:1.3rem;">🔥</div>
+          </div>
+          <div style="display:flex;align-items:baseline;gap:6px;">
+            <div id="stat-streak" class="stat-num" style="color:#fb923c;font-size:2.2rem;">0</div>
+            <span style="font-size:0.78rem;color:rgba(255,255,255,0.25);font-weight:500;">days</span>
+          </div>
+          <div style="margin-top:8px;display:flex;justify-content:space-between;font-size:0.7rem;">
+            <span style="color:rgba(255,255,255,0.25);">Best</span>
+            <span id="stat-best" style="color:rgba(251,146,60,0.7);font-weight:700;">0 days</span>
+          </div>
+          <div style="margin-top:6px;font-size:0.67rem;color:rgba(255,255,255,0.2);">
+            Complete ≥70% tasks to keep streak
+          </div>
+        </div>
+
+        <!-- Level -->
+        <div class="score-card" style="--card-glow:linear-gradient(135deg,rgba(139,92,246,0.07),rgba(99,102,241,0.04));
+             border-color:rgba(139,92,246,0.2);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <span class="stat-key" style="color:rgba(139,92,246,0.7);">Level</span>
+            <div id="stat-level-emoji" style="font-size:1.3rem;">🌱</div>
+          </div>
+          <div id="stat-level" class="stat-num" style="color:#a78bfa;font-size:1.6rem;">Seedling</div>
+          <div style="margin-top:10px;display:flex;flex-direction:column;gap:4px;">
+            <div style="font-size:0.67rem;color:rgba(255,255,255,0.2);">Level thresholds</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <span style="font-size:0.6rem;padding:2px 6px;border-radius:10px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.3);">🌱0</span>
+              <span style="font-size:0.6rem;padding:2px 6px;border-radius:10px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.3);">📖100</span>
+              <span style="font-size:0.6rem;padding:2px 6px;border-radius:10px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.3);">⚡300</span>
+              <span style="font-size:0.6rem;padding:2px 6px;border-radius:10px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.3);">🔥600</span>
+              <span style="font-size:0.6rem;padding:2px 6px;border-radius:10px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.3);">💎1000</span>
+              <span style="font-size:0.6rem;padding:2px 6px;border-radius:10px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.3);">🏆2000</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Checklist | Chart | Side Panel — 3 columns full width -->
+      <div style="display:grid;grid-template-columns:2fr 1.4fr 1.4fr;gap:18px;width:100%;align-items:start;">
+
+        <!-- LEFT: Checklist -->
+        <div class="glass-card" style="min-height:420px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+            <div>
+              <div style="font-size:1rem;font-weight:700;color:#fff;">Daily Checklist</div>
+              <div style="font-size:0.72rem;color:rgba(255,255,255,0.3);margin-top:2px;">Check off tasks as you go</div>
+            </div>
+            <button onclick="resetToday()"
+              style="font-size:0.72rem;color:rgba(255,255,255,0.25);background:rgba(255,255,255,0.04);
+                     border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:6px 12px;
+                     cursor:pointer;transition:all 0.2s;"
+              onmouseover="this.style.borderColor='rgba(239,68,68,0.4)';this.style.color='#f87171'"
+              onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.color='rgba(255,255,255,0.25)'">
+              ↺ Reset
+            </button>
+          </div>
+          <div id="checklist-container"></div>
+        </div>
+
+        <!-- MIDDLE: Doughnut chart -->
+        <div class="glass-card" style="display:flex;flex-direction:column;">
+          <div style="font-size:1rem;font-weight:700;color:#fff;margin-bottom:2px;">Progress</div>
+          <div style="font-size:0.72rem;color:rgba(255,255,255,0.3);margin-bottom:20px;">Today's completion</div>
+          <div style="display:flex;justify-content:center;align-items:center;padding:10px 0;">
+            <div style="position:relative;width:170px;height:170px;">
+              <canvas id="progress-chart"></canvas>
+              <div style="position:absolute;inset:0;display:flex;flex-direction:column;
+                          align-items:center;justify-content:center;pointer-events:none;">
+                <span id="chart-pct" style="font-size:2rem;font-weight:800;color:#fff;line-height:1;
+                  text-shadow:0 0 20px rgba(0,198,255,0.6);">0%</span>
+                <span style="font-size:0.65rem;color:rgba(255,255,255,0.3);margin-top:3px;">complete</span>
+              </div>
+            </div>
+          </div>
+          <div id="chart-legend" style="margin-top:18px;display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+
+        <!-- RIGHT: Weekly streak + Quote -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+
+          <!-- Weekly streak -->
+          <div class="glass-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+              <div style="font-size:0.95rem;font-weight:700;color:#fff;">Weekly Streak</div>
+              <span style="font-size:1.2rem;">🔥</span>
+            </div>
+            <div id="week-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center;"></div>
+            <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);
+                        display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:0.7rem;color:rgba(255,255,255,0.3);">This week</span>
+              <span id="streak-count" style="font-size:0.75rem;font-weight:700;color:#00c6ff;">0 / 7 days</span>
+            </div>
+          </div>
+
+          <!-- Quote card -->
+          <div class="glass-card" style="background:linear-gradient(135deg,rgba(0,198,255,0.08),rgba(0,114,255,0.06));
+            border-color:rgba(0,198,255,0.15);">
+            <div style="font-size:0.7rem;font-weight:700;color:#00c6ff;letter-spacing:0.08em;
+                        text-transform:uppercase;margin-bottom:10px;">Daily Motivation</div>
+            <div id="daily-quote" style="font-size:0.82rem;color:rgba(255,255,255,0.75);line-height:1.6;
+                        font-style:italic;">"Loading…"</div>
+            <div id="quote-author" style="font-size:0.7rem;color:rgba(255,255,255,0.3);margin-top:8px;"></div>
+          </div>
+
+          <!-- Quick tip -->
+          <div class="glass-card" style="background:linear-gradient(135deg,rgba(139,92,246,0.08),rgba(99,102,241,0.06));
+            border-color:rgba(139,92,246,0.18);">
+            <div style="font-size:0.7rem;font-weight:700;color:#a78bfa;letter-spacing:0.08em;
+                        text-transform:uppercase;margin-bottom:10px;">⚡ Study Tip</div>
+            <div id="daily-tip" style="font-size:0.8rem;color:rgba(255,255,255,0.6);line-height:1.6;"></div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── ADD TOPIC ── -->
+    <div id="page-add-topic" class="page">
+      <div style="margin-bottom:28px;">
+        <div class="page-title">Add Study Topic</div>
+        <div class="page-sub">Plan a new subject with daily goals.</div>
+      </div>
+      <div class="glow-line"></div>
+
+      <div style="max-width:640px;">
+        <div class="glass-card" style="display:flex;flex-direction:column;gap:20px;">
+
+          <div>
+            <label class="field-label">Topic Name</label>
+            <input id="inp-topic" type="text" placeholder="e.g. AWS, Machine Learning, Python…" />
+          </div>
+
+          <div>
+            <label class="field-label">Description <span style="color:rgba(255,255,255,0.2);font-weight:400;">(optional)</span></label>
+            <textarea id="inp-desc" rows="2" placeholder="Brief goal or scope…"></textarea>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div>
+              <label class="field-label">Total Study Days</label>
+              <input id="inp-days" type="number" min="1" max="365" placeholder="e.g. 30" />
+              <div style="font-size:0.68rem;color:rgba(255,255,255,0.2);margin-top:5px;">How many days total</div>
+            </div>
+            <div>
+              <label class="field-label">Daily Hours</label>
+              <input id="inp-hours" type="number" min="0.5" max="12" step="0.5" placeholder="e.g. 2" />
+              <div style="font-size:0.68rem;color:rgba(255,255,255,0.2);margin-top:5px;">Hours per day</div>
+            </div>
+          </div>
+
+          <div>
+            <label class="field-label">Daily Sub-tasks</label>
+            <div style="font-size:0.68rem;color:rgba(255,255,255,0.2);margin-bottom:10px;">Appear as checkboxes on your dashboard</div>
+            <div id="subtask-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;"></div>
+            <button onclick="addSubtaskField()"
+              style="display:flex;align-items:center;gap:6px;font-size:0.8rem;
+                     color:#00c6ff;font-weight:600;background:none;border:none;cursor:pointer;
+                     padding:4px 0;transition:color 0.15s;"
+              onmouseover="this.style.color='#0072ff'" onmouseout="this.style.color='#00c6ff'">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+              Add sub-task
+            </button>
+          </div>
+
+          <div>
+            <label class="field-label">Topic Color</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;" id="color-picker">
+              <button class="color-dot selected" onclick="selectColor(this,'#00c6ff')" style="background:#00c6ff;"></button>
+              <button class="color-dot" onclick="selectColor(this,'#0072ff')" style="background:#0072ff;"></button>
+              <button class="color-dot" onclick="selectColor(this,'#10b981')" style="background:#10b981;"></button>
+              <button class="color-dot" onclick="selectColor(this,'#f59e0b')" style="background:#f59e0b;"></button>
+              <button class="color-dot" onclick="selectColor(this,'#ef4444')" style="background:#ef4444;"></button>
+              <button class="color-dot" onclick="selectColor(this,'#8b5cf6')" style="background:#8b5cf6;"></button>
+              <button class="color-dot" onclick="selectColor(this,'#ec4899')" style="background:#ec4899;"></button>
+              <button class="color-dot" onclick="selectColor(this,'#f97316')" style="background:#f97316;"></button>
+            </div>
+          </div>
+
+          <div id="form-error" style="display:none;font-size:0.8rem;color:#f87171;
+            background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);
+            border-radius:10px;padding:10px 14px;"></div>
+
+          <div style="display:flex;gap:10px;padding-top:4px;">
+            <button class="btn-primary" onclick="saveTopic()" style="flex:1;">Save Topic</button>
+            <button class="btn-secondary" onclick="clearForm()">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MY TOPICS ── -->
+    <div id="page-topics" class="page">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
+        <div>
+          <div class="page-title">My Topics</div>
+          <div class="page-sub">All your study subjects at a glance.</div>
+        </div>
+        <button class="btn-primary" onclick="navigate('add-topic', document.querySelector('[data-page=add-topic]'))">
+          + Add Topic
+        </button>
+      </div>
+      <div class="glow-line"></div>
+      <div id="topics-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Day Summary Modal -->
+<div id="summary-modal">
+  <div class="summary-box">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="font-size:2.5rem;margin-bottom:8px;" id="summary-emoji">🌅</div>
+      <div style="font-size:1.3rem;font-weight:800;color:#fff;">Yesterday's Summary</div>
+      <div id="summary-date" style="font-size:0.8rem;color:rgba(255,255,255,0.3);margin-top:4px;"></div>
+    </div>
+
+    <!-- Score highlight -->
+    <div style="background:linear-gradient(135deg,rgba(0,198,255,0.1),rgba(0,114,255,0.07));
+         border:1px solid rgba(0,198,255,0.2);border-radius:16px;padding:20px;
+         text-align:center;margin-bottom:20px;">
+      <div style="font-size:0.7rem;font-weight:700;color:#00c6ff;letter-spacing:0.1em;
+                  text-transform:uppercase;margin-bottom:6px;">Points Earned</div>
+      <div id="summary-score" style="font-size:3rem;font-weight:800;color:#00c6ff;
+           text-shadow:0 0 30px rgba(0,198,255,0.5);line-height:1;">+0</div>
+    </div>
+
+    <!-- Stats row -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
+      <div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:12px;padding:14px 8px;">
+        <div style="font-size:1.4rem;font-weight:800;color:#4ade80;" id="summary-done">0</div>
+        <div style="font-size:0.65rem;color:rgba(255,255,255,0.3);margin-top:3px;">Completed</div>
+      </div>
+      <div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:12px;padding:14px 8px;">
+        <div style="font-size:1.4rem;font-weight:800;color:#f87171;" id="summary-missed">0</div>
+        <div style="font-size:0.65rem;color:rgba(255,255,255,0.3);margin-top:3px;">Missed</div>
+      </div>
+      <div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:12px;padding:14px 8px;">
+        <div style="font-size:1.4rem;font-weight:800;color:#fb923c;" id="summary-streak">0🔥</div>
+        <div style="font-size:0.65rem;color:rgba(255,255,255,0.3);margin-top:3px;">Streak</div>
+      </div>
+    </div>
+
+    <!-- Topic breakdown -->
+    <div id="summary-breakdown" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;
+         max-height:160px;overflow-y:auto;"></div>
+
+    <!-- Streak message -->
+    <div id="summary-streak-msg" style="text-align:center;font-size:0.8rem;
+         color:rgba(255,255,255,0.4);margin-bottom:20px;"></div>
+
+    <button onclick="closeSummary()"
+      style="width:100%;background:linear-gradient(90deg,#00c6ff,#0072ff);color:#fff;
+             border:none;border-radius:12px;padding:14px;font-size:0.9rem;font-weight:700;
+             cursor:pointer;box-shadow:0 0 20px rgba(0,198,255,0.3);transition:all 0.2s;"
+      onmouseover="this.style.boxShadow='0 0 30px rgba(0,198,255,0.5)'"
+      onmouseout="this.style.boxShadow='0 0 20px rgba(0,198,255,0.3)'">
+      Start Today 🚀
+    </button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast">
+  <div class="toast-inner">
+    <svg width="14" height="14" fill="none" stroke="#00c6ff" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+    <span id="toast-msg"></span>
+  </div>
+</div>
+
+<script>
+// ── PARTICLES ─────────────────────────────────────────
+const canvas = document.getElementById('particles');
+const ctx2 = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+let pts = [];
+for (let i = 0; i < 90; i++) {
+  pts.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: Math.random() * 1.5 + 0.3,
+    dx: (Math.random() - 0.5) * 0.5,
+    dy: (Math.random() - 0.5) * 0.5,
+  });
+}
+function drawParticles() {
+  ctx2.clearRect(0, 0, canvas.width, canvas.height);
+  pts.forEach(p => {
+    p.x += p.dx; p.y += p.dy;
+    if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
+    if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+    ctx2.beginPath();
+    ctx2.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx2.fillStyle = 'rgba(0,198,255,0.6)';
+    ctx2.shadowBlur = 12;
+    ctx2.shadowColor = '#00c6ff';
+    ctx2.fill();
+  });
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+
+// ── STATE ────────────────────────────────────────────
+let state = { topics: [], checked: {}, selectedColor: '#00c6ff' };
+function loadState() { const r = localStorage.getItem('aicare_state'); if (r) state = {...state, ...JSON.parse(r)}; }
+function saveState() { localStorage.setItem('aicare_state', JSON.stringify(state)); }
+
+// ── DAILY TASKS CACHE ─────────────────────────────────
+// Key: daily_tasks_{topicId}_{YYYY-MM-DD}
+// Value: {tasks: [...], dailyFocus: '...', phase: '...'}
+function dailyTasksCacheKey(topicId) { return `daily_tasks_${topicId}_${todayKey()}`; }
+
+async function getDailyTasks(topic) {
+  const key = dailyTasksCacheKey(topic.id);
+  const cached = localStorage.getItem(key);
+  if (cached) return JSON.parse(cached);
+
+  const createdAt = new Date(topic.createdAt || Date.now());
+  const dayNum = Math.min(Math.max(1,
+    Math.floor((Date.now() - createdAt) / 86400000) + 1), topic.days || 30);
+  const numTasks = (topic.subtasks || []).length || 4;
+
+  try {
+    const res = await fetch(`${API}/ai/daily-tasks`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({
+        topic: topic.name,
+        dayNumber: dayNum,
+        totalDays: topic.days || 30,
+        dailyHours: topic.hours || 1.5,
+        numTasks: numTasks
+      })
+    });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    const result = { tasks: data.tasks, dailyFocus: data.dailyFocus, phase: data.phase, day: dayNum };
+    localStorage.setItem(key, JSON.stringify(result));
+    return result;
+  } catch {
+    // fallback to static subtasks
+    return {
+      tasks: topic.subtasks || [`Study ${topic.name}`, 'Review concepts', 'Practice exercises', 'Take notes'],
+      dailyFocus: `Day ${dayNum} — ${topic.name}`,
+      phase: 'Foundation',
+      day: dayNum
+    };
+  }
+}
+
+// ── NAVIGATION ───────────────────────────────────────
+function navigate(pageId, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-link').forEach(a => a.classList.remove('active'));
+  document.getElementById('page-' + pageId).classList.add('active');
+  const link = el || document.querySelector(`[data-page="${pageId}"]`);
+  if (link) link.classList.add('active');
+  if (pageId === 'dashboard') renderDashboard();
+  if (pageId === 'topics') renderTopics();
+  return false;
+}
+
+// ── COLOR PICKER ─────────────────────────────────────
+function selectColor(btn, color) {
+  state.selectedColor = color;
+  document.querySelectorAll('.color-dot').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+// ── SUB-TASKS ────────────────────────────────────────
+function addSubtaskField(value = '') {
+  const list = document.getElementById('subtask-list');
+  const idx = list.children.length;
+  const div = document.createElement('div');
+  div.style.cssText = 'display:flex;align-items:center;gap:8px;';
+  div.innerHTML = `
+    <input type="text" value="${value}" placeholder="Sub-task ${idx + 1}…"
+      style="flex:1;padding:9px 13px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.1);
+             font-size:0.825rem;outline:none;background:rgba(255,255,255,0.04);color:#e2e8f0;
+             transition:all 0.2s;box-sizing:border-box;"
+      onfocus="this.style.borderColor='#00c6ff';this.style.boxShadow='0 0 0 3px rgba(0,198,255,0.12)'"
+      onblur="this.style.borderColor='rgba(255,255,255,0.1)';this.style.boxShadow='none'" />
+    <button onclick="this.parentElement.remove()"
+      style="width:30px;height:30px;border:1px solid rgba(239,68,68,0.2);background:rgba(239,68,68,0.1);
+             border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;"
+      onmouseover="this.style.background='rgba(239,68,68,0.25)'" onmouseout="this.style.background='rgba(239,68,68,0.1)'">
+      <svg width="11" height="11" fill="none" stroke="#f87171" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>`;
+  list.appendChild(div);
+}
+
+// ── SAVE TOPIC ───────────────────────────────────────
+function saveTopic() {
+  const name  = document.getElementById('inp-topic').value.trim();
+  const desc  = document.getElementById('inp-desc').value.trim();
+  const days  = parseInt(document.getElementById('inp-days').value);
+  const hours = parseFloat(document.getElementById('inp-hours').value) || 1;
+  const errEl = document.getElementById('form-error');
+  errEl.style.display = 'none';
+  if (!name) { showError('Please enter a topic name.'); return; }
+  if (!days || days < 1) { showError('Please enter a valid number of study days.'); return; }
+  const subtasks = Array.from(document.querySelectorAll('#subtask-list input'))
+    .map(i => i.value.trim()).filter(Boolean);
+  state.topics.push({
+    id: Date.now().toString(), name, desc, days, hours,
+    color: state.selectedColor,
+    subtasks: subtasks.length ? subtasks : [`Study ${name}`, 'Review notes', 'Practice problems'],
+    createdAt: new Date().toISOString(),
+  });
+  saveState();
+  showToast(`"${name}" added!`);
+  clearForm();
+  navigate('dashboard', document.querySelector('[data-page=dashboard]'));
+}
+function showError(msg) { const e = document.getElementById('form-error'); e.textContent = msg; e.style.display = 'block'; }
+function clearForm() {
+  ['inp-topic','inp-desc','inp-days','inp-hours'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('subtask-list').innerHTML = '';
+  document.getElementById('form-error').style.display = 'none';
+}
+
+// ── DASHBOARD ────────────────────────────────────────
+let chartInstance = null;
+function todayKey() { return new Date().toISOString().slice(0, 10); }
+function checkKey(tid, i) { return `${todayKey()}_${tid}_${i}`; }
+
+// Holds the AI-fetched daily tasks per topic for the current render cycle
+let _dailyTasksMap = {};
+
+async function renderDashboard() {
+  document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-US', {
+    weekday:'long', year:'numeric', month:'long', day:'numeric'
+  });
+  const topics = state.topics;
+  document.getElementById('stat-topics').textContent = topics.length;
+  const container = document.getElementById('checklist-container');
+
+  if (!topics.length) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:48px 20px;">
+        <div class="empty-icon">
+          <svg width="24" height="24" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.8" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+          </svg>
+        </div>
+        <div style="font-size:0.875rem;color:rgba(255,255,255,0.25);margin-bottom:12px;">No topics yet. Start your journey!</div>
+        <a href="#" onclick="navigate('add-topic', document.querySelector('[data-page=add-topic]'))"
+          style="font-size:0.825rem;color:#00c6ff;font-weight:600;text-decoration:none;">
+          + Add your first topic →
+        </a>
+      </div>`;
+    updateChart(0, 0, []);
+    document.getElementById('stat-tasks').textContent = 0;
+    document.getElementById('stat-done').textContent = 0;
+    const hEl = document.getElementById('stat-hours');
+    if (hEl) hEl.textContent = 0;
+    renderWeekStreak();
+    renderQuote();
+    return;
+  }
+
+  // Show loading skeleton while fetching
+  container.innerHTML = `<div style="display:flex;flex-direction:column;gap:10px;padding:10px 0;">
+    ${topics.map(() => `
+      <div style="height:20px;border-radius:8px;background:linear-gradient(90deg,rgba(255,255,255,0.04),rgba(255,255,255,0.08),rgba(255,255,255,0.04));background-size:200%;animation:shimmer 1.5s infinite;"></div>
+      <div style="height:16px;width:80%;border-radius:8px;background:linear-gradient(90deg,rgba(255,255,255,0.03),rgba(255,255,255,0.06),rgba(255,255,255,0.03));background-size:200%;animation:shimmer 1.5s infinite;"></div>
+    `).join('')}
+  </div>`;
+
+  // Fetch daily tasks for all topics in parallel
+  const taskResults = await Promise.all(topics.map(t => getDailyTasks(t)));
+  taskResults.forEach((r, i) => { _dailyTasksMap[topics[i].id] = r; });
+
+  // Render with fetched tasks
+  let totalTasks = 0, doneTasks = 0, html = '';
+  topics.forEach((topic, ti) => {
+    const dailyData = _dailyTasksMap[topic.id] || {};
+    const sub = dailyData.tasks || topic.subtasks || [];
+    const day = dailyData.day || 1;
+    const phase = dailyData.phase || 'Foundation';
+    const focus = dailyData.dailyFocus || `Day ${day} — ${topic.name}`;
+
+    const phaseColor = {Foundation:'#4ade80', Intermediate:'#00c6ff', Advanced:'#fb923c', Pro:'#a78bfa'}[phase] || '#00c6ff';
+    const topicDone = sub.filter((_, i) => state.checked[checkKey(topic.id, i)]).length;
+    totalTasks += sub.length;
+    doneTasks += topicDone;
+    const pct = sub.length ? Math.round(topicDone / sub.length * 100) : 0;
+    const createdAt = new Date(topic.createdAt || Date.now());
+    const dayNum = Math.min(Math.max(1, Math.floor((Date.now() - createdAt) / 86400000) + 1), topic.days || 30);
+
+    html += `
+      <div style="${ti < topics.length-1 ? 'margin-bottom:22px;padding-bottom:22px;border-bottom:1px solid rgba(255,255,255,0.05);' : ''}">
+        <!-- Topic header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span style="width:8px;height:8px;border-radius:50%;background:${topic.color};box-shadow:0 0 8px ${topic.color};flex-shrink:0;"></span>
+            <span style="font-weight:700;color:#fff;font-size:0.875rem;">${topic.name}</span>
+            <span style="font-size:0.65rem;padding:2px 8px;border-radius:20px;font-weight:700;
+              background:${phaseColor}18;color:${phaseColor};border:1px solid ${phaseColor}33;">${phase}</span>
+            <span style="font-size:0.65rem;color:rgba(255,255,255,0.25);background:rgba(255,255,255,0.05);
+              padding:2px 7px;border-radius:10px;border:1px solid rgba(255,255,255,0.07);">
+              Day ${dayNum} / ${topic.days}
+            </span>
+          </div>
+          <span style="font-size:0.75rem;font-weight:700;color:${pct===100?'#4ade80':'rgba(255,255,255,0.3)'};">
+            ${pct===100 ? '✓ Done' : pct+'%'}
+          </span>
+        </div>
+        <!-- Daily focus -->
+        <div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-bottom:10px;
+          padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.03);
+          border-left:2px solid ${phaseColor};display:flex;align-items:center;gap:6px;">
+          <span>📌</span> <span>${focus}</span>
+        </div>
+        <!-- Tasks -->
+        <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;">`;
+
+    sub.forEach((task, i) => {
+      const key = checkKey(topic.id, i);
+      const checked = !!state.checked[key];
+      const uid = `chk_${topic.id}_${i}`;
+      const learnUrl = `learn.html?topic=${encodeURIComponent(topic.name)}&task=${encodeURIComponent(task)}&color=${encodeURIComponent(topic.color)}&day=${dayNum}&totalDays=${topic.days||30}&hours=${topic.hours||1.5}&ti=${ti}&i=${i}`;
+      html += `
+          <div class="check-row ${checked ? 'done' : ''}">
+            <input type="checkbox" id="${uid}" ${checked ? 'checked' : ''}
+              onchange="toggleCheck('${key}', this.checked)" onclick="event.stopPropagation()" />
+            <a href="${learnUrl}"
+              style="font-size:0.82rem;color:${checked?'rgba(255,255,255,0.3)':'rgba(255,255,255,0.8)'};
+              flex:1;text-decoration:none;${checked?'text-decoration:line-through;':''}
+              transition:color 0.15s;display:flex;align-items:center;gap:6px;"
+              onmouseover="if(!this.closest('.check-row').classList.contains('done'))this.style.color='${topic.color}'"
+              onmouseout="this.style.color='${checked?'rgba(255,255,255,0.3)':'rgba(255,255,255,0.8)'}'">
+              ${task}
+              ${!checked?`<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="opacity:0.3;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>`:''}
+            </a>
+            ${checked?`<svg width="12" height="12" fill="none" stroke="#4ade80" stroke-width="2.5" viewBox="0 0 24 24" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`:''}
+          </div>`;
+    });
+
+    html += `
+        </div>
+        <div class="prog-track">
+          <div class="prog-fill" style="width:${pct}%;background:linear-gradient(90deg,${topic.color},${topic.color}99);"></div>
+        </div>
+      </div>`;
+  });
+
+  container.innerHTML = html;
+  document.getElementById('stat-tasks').textContent = totalTasks;
+  document.getElementById('stat-done').textContent = doneTasks;
+  const totalHours = topics.reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
+  const hEl = document.getElementById('stat-hours');
+  if (hEl) hEl.textContent = totalHours % 1 === 0 ? totalHours : totalHours.toFixed(1);
+  updateChart(doneTasks, totalTasks, topics);
+  renderWeekStreak();
+  renderQuote();
+}
+
+function toggleCheck(key, val) {
+  if (val) state.checked[key] = true; else delete state.checked[key];
+  saveState();
+  renderDashboard();
+}
+function resetToday() {
+  const p = todayKey();
+  Object.keys(state.checked).forEach(k => { if (k.startsWith(p)) delete state.checked[k]; });
+  // Also clear today's task cache so tasks reload fresh
+  Object.keys(localStorage).forEach(k => { if (k.startsWith('daily_tasks_') && k.endsWith(p)) localStorage.removeItem(k); });
+  saveState(); renderDashboard();
+}
+
+function updateChart(done, total, topics) {
+  const pct = total ? Math.round(done / total * 100) : 0;
+  document.getElementById('chart-pct').textContent = pct + '%';
+
+  const legendEl = document.getElementById('chart-legend');
+  legendEl.innerHTML = topics.map(t => {
+    const sub = t.subtasks || [];
+    const d = sub.filter((_,i) => state.checked[checkKey(t.id,i)]).length;
+    const p = sub.length ? Math.round(d/sub.length*100) : 0;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="width:8px;height:8px;border-radius:50%;background:${t.color};box-shadow:0 0 6px ${t.color};flex-shrink:0;"></span>
+        <span style="font-size:0.75rem;color:rgba(255,255,255,0.5);">${t.name}</span>
+      </div>
+      <span style="font-size:0.72rem;font-weight:700;color:${p===100?'#4ade80':'rgba(255,255,255,0.3)'};">${p}%</span>
+    </div>`;
+  }).join('');
+
+  const cctx = document.getElementById('progress-chart').getContext('2d');
+  if (chartInstance) chartInstance.destroy();
+
+  let vals = [], colors = [];
+  if (topics.length) {
+    topics.forEach(t => {
+      const sub = t.subtasks||[];
+      const d = sub.filter((_,i)=>state.checked[checkKey(t.id,i)]).length;
+      const p = sub.length - d;
+      if (d>0) { vals.push(d); colors.push(t.color); }
+      if (p>0) { vals.push(p); colors.push(t.color+'22'); }
+    });
+    if (!vals.length) { vals=[1]; colors=['rgba(255,255,255,0.07)']; }
+  } else { vals=[1]; colors=['rgba(255,255,255,0.07)']; }
+
+  chartInstance = new Chart(cctx, {
+    type: 'doughnut',
+    data: {
+      datasets: [{
+        data: vals,
+        backgroundColor: colors,
+        borderWidth: 2,
+        borderColor: 'rgba(0,0,0,0.4)',
+        hoverBorderWidth: 3,
+      }]
+    },
+    options: {
+      cutout: '74%',
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      animation: { duration: 700, easing: 'easeInOutQuart' },
+    }
+  });
+}
+
+// ── MY TOPICS ────────────────────────────────────────
+function renderTopics() {
+  const grid = document.getElementById('topics-grid');
+  if (!state.topics.length) {
+    grid.innerHTML = `
+      <div style="grid-column:span 2;text-align:center;padding:64px 20px;">
+        <div class="empty-icon">
+          <svg width="24" height="24" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.8" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+          </svg>
+        </div>
+        <div style="font-size:0.875rem;color:rgba(255,255,255,0.25);margin-bottom:14px;">No topics added yet.</div>
+        <button class="btn-primary" onclick="navigate('add-topic', document.querySelector('[data-page=add-topic]'))">
+          + Add your first topic
+        </button>
+      </div>`;
+    return;
+  }
+  grid.innerHTML = state.topics.map(t => {
+    const sub = t.subtasks||[];
+    const done = sub.filter((_,i)=>state.checked[checkKey(t.id,i)]).length;
+    const pct = sub.length ? Math.round(done/sub.length*100) : 0;
+    const created = new Date(t.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    return `
+    <div class="topic-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:40px;height:40px;border-radius:12px;flex-shrink:0;
+            background:linear-gradient(135deg,${t.color}33,${t.color}11);
+            border:1px solid ${t.color}44;
+            display:flex;align-items:center;justify-content:center;
+            box-shadow:0 0 14px ${t.color}22;">
+            <span style="font-size:1.1rem;">📚</span>
+          </div>
+          <div>
+            <div style="font-weight:700;color:#fff;font-size:0.9rem;">${t.name}</div>
+            <div style="font-size:0.68rem;color:rgba(255,255,255,0.25);margin-top:2px;">Since ${created}</div>
+          </div>
+        </div>
+        <button class="del-btn" onclick="deleteTopic('${t.id}')">
+          <svg width="11" height="11" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+        </button>
+      </div>
+      ${t.desc?`<div style="font-size:0.78rem;color:rgba(255,255,255,0.35);margin-bottom:12px;line-height:1.55;">${t.desc}</div>`:''}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">
+        <span class="tag">${t.days} days</span>
+        <span class="tag">${t.hours}h/day</span>
+        <span class="tag" style="background:${t.color}18;color:${t.color};border-color:${t.color}33;">${sub.length} tasks</span>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:0.7rem;margin-bottom:5px;">
+          <span style="color:rgba(255,255,255,0.25);">Today's progress</span>
+          <span style="font-weight:700;color:${pct===100?'#4ade80':'rgba(255,255,255,0.4)'};">${pct}%</span>
+        </div>
+        <div class="prog-track">
+          <div class="prog-fill" style="width:${pct}%;background:linear-gradient(90deg,${t.color},${t.color}88);"></div>
+        </div>
+      </div>
+      ${sub.length?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:12px;">
+        ${sub.slice(0,3).map(s=>`<span style="font-size:0.65rem;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.35);
+          padding:3px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.07);">${s}</span>`).join('')}
+        ${sub.length>3?`<span style="font-size:0.65rem;color:rgba(255,255,255,0.2);">+${sub.length-3} more</span>`:''}
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function deleteTopic(id) {
+  if (!confirm('Remove this topic?')) return;
+  state.topics = state.topics.filter(t => t.id !== id);
+  Object.keys(state.checked).forEach(k => { if (k.includes(`_${id}_`)) delete state.checked[k]; });
+  saveState(); renderTopics();
+  showToast('Topic removed');
+}
+
+// ── TOAST ────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  clearTimeout(toastTimer);
+  document.getElementById('toast-msg').textContent = msg;
+  document.getElementById('toast').style.display = 'block';
+  toastTimer = setTimeout(() => document.getElementById('toast').style.display = 'none', 2800);
+}
+
+// ── WEEKLY STREAK ────────────────────────────────────
+function renderWeekStreak() {
+  const days = ['S','M','T','W','T','F','S'];
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0=Sun
+  // Build Mon-Sun of current week starting Sunday
+  let activeDays = 0;
+  const el = document.getElementById('week-days');
+  if (!el) return;
+  el.innerHTML = days.map((d, i) => {
+    // Mark today and past days of this week as active if topics exist and user has checked something
+    const isPast = i < dayOfWeek;
+    const isToday = i === dayOfWeek;
+    const hasTasks = state.topics.length > 0;
+    // For past days, check if there are any checks stored for that date
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - dayOfWeek + i);
+    const dateKey = weekStart.toISOString().slice(0, 10);
+    const hadActivity = Object.keys(state.checked).some(k => k.startsWith(dateKey));
+    const active = hadActivity || (isToday && hasTasks);
+    if (active) activeDays++;
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+      <div style="width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+        font-size:0.7rem;font-weight:700;
+        background:${isToday ? 'linear-gradient(135deg,#00c6ff,#0072ff)' : active ? 'rgba(0,198,255,0.15)' : 'rgba(255,255,255,0.04)'};
+        border:1px solid ${isToday ? 'transparent' : active ? 'rgba(0,198,255,0.3)' : 'rgba(255,255,255,0.07)'};
+        color:${isToday ? '#fff' : active ? '#00c6ff' : 'rgba(255,255,255,0.25)'};
+        box-shadow:${isToday ? '0 0 12px rgba(0,198,255,0.4)' : 'none'};">
+        ${d}
+      </div>
+      <div style="width:5px;height:5px;border-radius:50%;
+        background:${active ? '#00c6ff' : 'rgba(255,255,255,0.07)'};
+        box-shadow:${active ? '0 0 6px #00c6ff' : 'none'};"></div>
+    </div>`;
+  }).join('');
+  const sc = document.getElementById('streak-count');
+  if (sc) sc.textContent = `${activeDays} / 7 days`;
+}
+
+// ── QUOTES & TIPS ────────────────────────────────────
+const QUOTES = [
+  { text: "The secret of getting ahead is getting started.", author: "— Mark Twain" },
+  { text: "An investment in knowledge pays the best interest.", author: "— Benjamin Franklin" },
+  { text: "Education is not preparation for life; education is life itself.", author: "— John Dewey" },
+  { text: "The more that you read, the more things you will know.", author: "— Dr. Seuss" },
+  { text: "Live as if you were to die tomorrow. Learn as if you were to live forever.", author: "— Mahatma Gandhi" },
+  { text: "Success is the sum of small efforts, repeated day in and day out.", author: "— Robert Collier" },
+  { text: "Don't watch the clock; do what it does. Keep going.", author: "— Sam Levenson" },
+];
+const TIPS = [
+  "Use the Pomodoro technique: 25 min focus, 5 min break.",
+  "Review your notes within 24 hours to retain 80% more.",
+  "Teach what you learn — explaining it cements understanding.",
+  "Study in the same spot daily to build a focus habit.",
+  "Sleep consolidates memory — aim for 7–8 hours after studying.",
+  "Break big topics into smaller chunks and tackle one at a time.",
+  "Quiz yourself instead of re-reading for deeper retention.",
+];
+function renderQuote() {
+  const idx = new Date().getDate() % QUOTES.length;
+  const q = QUOTES[idx];
+  const qEl = document.getElementById('daily-quote');
+  const aEl = document.getElementById('quote-author');
+  if (qEl) qEl.textContent = `"${q.text}"`;
+  if (aEl) aEl.textContent = q.author;
+  const tipIdx = (new Date().getDate() + 3) % TIPS.length;
+  const tEl = document.getElementById('daily-tip');
+  if (tEl) tEl.textContent = TIPS[tipIdx];
+}
+
+// ── API ──────────────────────────────────────────────
+const API = 'http://localhost:8080/api';
+function authHeaders() {
+  const sess = JSON.parse(localStorage.getItem('aicare_session') || '{}');
+  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sess.token || ''}` };
+}
+
+async function fetchStats() {
+  try {
+    const res = await fetch(`${API}/study/dashboard`, { headers: authHeaders() });
+    if (!res.ok) return;
+    const data = await res.json();
+    updateStatsCards(data.stats);
+    if (data.pendingSummary) showSummaryModal(data.pendingSummary);
+  } catch (e) {
+    // backend offline — stats stay at 0
+  }
+}
+
+function updateStatsCards(stats) {
+  if (!stats) return;
+  document.getElementById('stat-score').textContent = stats.totalScore.toLocaleString();
+  document.getElementById('stat-streak').textContent = stats.currentStreak;
+  document.getElementById('stat-best').textContent = stats.bestStreak + ' days';
+  document.getElementById('stat-level').textContent = stats.level;
+  document.getElementById('stat-level-emoji').textContent = stats.levelEmoji || '🌱';
+  document.getElementById('stat-pts-next').textContent = stats.pointsToNextLevel > 0
+    ? stats.pointsToNextLevel + ' pts to next' : '🏆 Max Level!';
+
+  // Score progress bar to next level
+  const levelThresholds = [0, 100, 300, 600, 1000, 2000];
+  const score = stats.totalScore;
+  let prev = 0, next = 100;
+  for (let i = 0; i < levelThresholds.length - 1; i++) {
+    if (score >= levelThresholds[i] && score < levelThresholds[i+1]) {
+      prev = levelThresholds[i]; next = levelThresholds[i+1]; break;
+    }
+  }
+  const pct = next > prev ? Math.min(100, Math.round((score - prev) / (next - prev) * 100)) : 100;
+  document.getElementById('score-bar').style.width = pct + '%';
+}
+
+// ── DAY SUMMARY MODAL ────────────────────────────────
+function showSummaryModal(s) {
+  document.getElementById('summary-date').textContent =
+    new Date(s.date).toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  document.getElementById('summary-score').textContent = '+' + s.dailyScore;
+  document.getElementById('summary-done').textContent = s.completedTasks;
+  document.getElementById('summary-missed').textContent = s.totalTasks - s.completedTasks;
+  document.getElementById('summary-streak').textContent = s.currentStreak + (s.streakChange ? '🔥' : '');
+
+  const emoji = s.completionRate === 1 ? '🏆' : s.completionRate >= 0.7 ? '🔥' : '😔';
+  document.getElementById('summary-emoji').textContent = emoji;
+
+  const breakdownEl = document.getElementById('summary-breakdown');
+  breakdownEl.innerHTML = (s.breakdown || []).map(b => {
+    const pct = b.total ? Math.round(b.completed / b.total * 100) : 0;
+    const color = pct === 100 ? '#4ade80' : pct >= 70 ? '#fb923c' : '#f87171';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;
+               padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:10px;
+               border:1px solid rgba(255,255,255,0.05);">
+      <span style="font-size:0.8rem;color:rgba(255,255,255,0.6);">${b.topicName}</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:0.75rem;color:rgba(255,255,255,0.3);">${b.completed}/${b.total}</span>
+        <span style="font-size:0.75rem;font-weight:700;color:${color};">${pct}%</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  const streakMsg = s.streakChange
+    ? `🔥 Streak extended to ${s.currentStreak} day${s.currentStreak !== 1 ? 's' : ''}! Keep it up!`
+    : `😔 Streak reset. Complete ≥70% of tasks to build your streak.`;
+  document.getElementById('summary-streak-msg').textContent = streakMsg;
+
+  document.getElementById('summary-modal').classList.add('show');
+}
+
+function closeSummary() {
+  document.getElementById('summary-modal').classList.remove('show');
+}
+
+// ── AUTH GUARD ───────────────────────────────────────
+(function() {
+  const sess = localStorage.getItem('aicare_session');
+  if (!sess || !JSON.parse(sess).loggedIn) {
+    window.location.href = 'login.html';
+  }
+})();
+
+// ── SHOW USER NAME ───────────────────────────────────
+(function() {
+  const sess = localStorage.getItem('aicare_session');
+  if (sess) {
+    const user = JSON.parse(sess);
+    const nameEl = document.querySelector('.user-pill div div:first-child');
+    if (nameEl && user.name) nameEl.textContent = user.name.split(' ')[0];
+  }
+})();
+
+// ── LOGOUT ───────────────────────────────────────────
+function logout() {
+  localStorage.removeItem('aicare_session');
+  window.location.href = 'login.html';
+}
+
+// ── INIT ─────────────────────────────────────────────
+loadState();
+renderDashboard();
+renderWeekStreak();
+renderQuote();
+fetchStats(); // load score/streak/level from backend
+</script>
+</body>
+</html>

@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AiCare — Your AI Student Companion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    * { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; }
+
+    :root {
+      --blue: #00c6ff;
+      --blue2: #0072ff;
+      --purple: #8b5cf6;
+      --green: #4ade80;
+      --orange: #fb923c;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: radial-gradient(circle at 30% 10%, #060d1f, #000000 60%);
+      color: #e2e8f0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── PARTICLES ── */
+    #particles {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0; pointer-events: none;
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(0,198,255,0.2); border-radius: 99px; }
+
+    /* ── HEADER ── */
+    header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 60px; height: 70px;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      transition: background 0.3s;
+    }
+    header.scrolled { background: rgba(0,0,0,0.75); }
+
+    .nav-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .brand-icon {
+      width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--blue), var(--blue2));
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 20px rgba(0,198,255,0.4);
+    }
+    .brand-name { font-size: 1.1rem; font-weight: 800; color: #fff; }
+
+    nav { display: flex; align-items: center; gap: 6px; }
+    nav a {
+      padding: 8px 16px; border-radius: 10px;
+      font-size: 0.85rem; font-weight: 500;
+      color: rgba(255,255,255,0.5); text-decoration: none;
+      transition: all 0.2s;
+    }
+    nav a:hover { color: #fff; background: rgba(255,255,255,0.06); }
+
+    .nav-actions { display: flex; align-items: center; gap: 10px; }
+    .btn-ghost {
+      padding: 9px 20px; border-radius: 10px;
+      border: 1.5px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.75); font-size: 0.85rem; font-weight: 600;
+      text-decoration: none; transition: all 0.2s;
+      background: rgba(255,255,255,0.04);
+    }
+    .btn-ghost:hover { border-color: rgba(255,255,255,0.3); color: #fff; background: rgba(255,255,255,0.08); }
+    .btn-cta {
+      padding: 9px 22px; border-radius: 10px;
+      background: linear-gradient(90deg, var(--blue), var(--blue2));
+      color: #fff; font-size: 0.85rem; font-weight: 700;
+      text-decoration: none; transition: all 0.2s;
+      box-shadow: 0 0 18px rgba(0,198,255,0.3);
+    }
+    .btn-cta:hover { box-shadow: 0 0 28px rgba(0,198,255,0.5); transform: translateY(-1px); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 110px 20px 80px;
+    }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 16px; border-radius: 99px;
+      background: rgba(0,198,255,0.08);
+      border: 1px solid rgba(0,198,255,0.2);
+      font-size: 0.75rem; font-weight: 600; color: var(--blue);
+      margin-bottom: 28px;
+      animation: fadeDown 0.6s ease both;
+    }
+    .hero-badge span { animation: pulse-dot 2s infinite; }
+
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .hero h1 {
+      font-size: clamp(2.8rem, 6vw, 5rem);
+      font-weight: 900; line-height: 1.1;
+      color: #fff; margin-bottom: 20px;
+      animation: fadeDown 0.7s 0.1s ease both;
+    }
+    .hero h1 .gradient-text {
+      background: linear-gradient(90deg, var(--blue), #7c3aed, var(--blue));
+      background-size: 200%;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: shimmer 4s linear infinite;
+    }
+    @keyframes shimmer { 0%{background-position:0%} 100%{background-position:200%} }
+
+    .hero-sub {
+      font-size: 1.1rem; color: rgba(255,255,255,0.45);
+      max-width: 560px; line-height: 1.75;
+      margin-bottom: 40px;
+      animation: fadeDown 0.7s 0.2s ease both;
+    }
+
+    .hero-actions {
+      display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+      animation: fadeDown 0.7s 0.3s ease both;
+    }
+    .btn-hero-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 15px 32px; border-radius: 14px;
+      background: linear-gradient(90deg, var(--blue), var(--blue2));
+      color: #fff; font-size: 0.95rem; font-weight: 700;
+      text-decoration: none; transition: all 0.25s;
+      box-shadow: 0 0 30px rgba(0,198,255,0.4);
+      position: relative; overflow: hidden;
+    }
+    .btn-hero-primary::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+      transform: translateX(-100%); transition: transform 0.5s;
+    }
+    .btn-hero-primary:hover::after { transform: translateX(100%); }
+    .btn-hero-primary:hover { box-shadow: 0 0 44px rgba(0,198,255,0.6); transform: translateY(-2px); }
+
+    .btn-hero-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 15px 32px; border-radius: 14px;
+      border: 1.5px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      color: rgba(255,255,255,0.75); font-size: 0.95rem; font-weight: 600;
+      text-decoration: none; transition: all 0.2s;
+    }
+    .btn-hero-secondary:hover { border-color: rgba(255,255,255,0.28); background: rgba(255,255,255,0.08); color: #fff; }
+
+    /* Floating stats */
+    .hero-stats {
+      display: flex; gap: 32px; margin-top: 60px; flex-wrap: wrap; justify-content: center;
+      animation: fadeDown 0.7s 0.45s ease both;
+    }
+    .stat-item { text-align: center; }
+    .stat-num  { font-size: 1.8rem; font-weight: 800; color: #fff; line-height: 1; }
+    .stat-num span { background: linear-gradient(90deg, var(--blue), var(--blue2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .stat-desc { font-size: 0.72rem; color: rgba(255,255,255,0.3); margin-top: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-divider { width: 1px; background: rgba(255,255,255,0.08); align-self: stretch; }
+
+    /* Scroll indicator */
+    .scroll-hint {
+      position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      color: rgba(255,255,255,0.2); font-size: 0.7rem; font-weight: 500;
+      animation: fadeIn 1s 1s ease both;
+    }
+    .scroll-arrow { animation: bounce 1.5s infinite; }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
+
+    /* ── GLOW ORBS ── */
+    .orb {
+      position: absolute; border-radius: 50%; filter: blur(80px);
+      pointer-events: none; z-index: 0;
+    }
+    .orb-1 { width: 500px; height: 500px; background: rgba(0,198,255,0.07); top: -100px; left: -100px; }
+    .orb-2 { width: 400px; height: 400px; background: rgba(139,92,246,0.07); top: 200px; right: -80px; }
+    .orb-3 { width: 350px; height: 350px; background: rgba(0,114,255,0.06); bottom: 0; left: 30%; }
+
+    /* ── SECTION ── */
+    section {
+      position: relative; z-index: 1;
+      padding: 90px 60px;
+    }
+    .section-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 14px; border-radius: 99px;
+      background: rgba(0,198,255,0.08); border: 1px solid rgba(0,198,255,0.18);
+      font-size: 0.72rem; font-weight: 700; color: var(--blue);
+      text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 14px;
+    }
+    .section-sub {
+      font-size: 0.95rem; color: rgba(255,255,255,0.38);
+      max-width: 520px; line-height: 1.75;
+    }
+
+    /* ── FEATURES ── */
+    #features { padding: 90px 60px; }
+    .features-header { text-align: center; margin-bottom: 60px; }
+    .features-header .section-sub { margin: 0 auto; }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .feature-card {
+      border-radius: 22px; padding: 32px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      backdrop-filter: blur(12px);
+      transition: all 0.3s;
+      position: relative; overflow: hidden;
+    }
+    .feature-card::before {
+      content: ''; position: absolute; inset: 0; border-radius: 22px;
+      background: linear-gradient(135deg, rgba(0,198,255,0.06), transparent 60%);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-card:hover {
+      border-color: rgba(0,198,255,0.22);
+      box-shadow: 0 0 40px rgba(0,198,255,0.08), 0 20px 40px rgba(0,0,0,0.3);
+      transform: translateY(-6px);
+    }
+
+    /* Main featured card */
+    .feature-card.featured {
+      background: linear-gradient(145deg, rgba(0,198,255,0.1), rgba(0,114,255,0.06));
+      border-color: rgba(0,198,255,0.2);
+    }
+    .feature-card.featured:hover { border-color: rgba(0,198,255,0.4); }
+
+    .card-icon-wrap {
+      width: 56px; height: 56px; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px; font-size: 1.6rem;
+      position: relative;
+    }
+    .card-icon-glow {
+      position: absolute; inset: -4px; border-radius: 20px;
+      filter: blur(10px); opacity: 0.4;
+    }
+
+    .card-title {
+      font-size: 1.2rem; font-weight: 800; color: #fff; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .card-desc {
+      font-size: 0.85rem; color: rgba(255,255,255,0.42);
+      line-height: 1.75; margin-bottom: 22px;
+    }
+
+    .coming-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 12px; border-radius: 99px; font-size: 0.68rem; font-weight: 700;
+      background: rgba(251,146,60,0.1); border: 1px solid rgba(251,146,60,0.25);
+      color: #fb923c;
+    }
+    .live-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 12px; border-radius: 99px; font-size: 0.68rem; font-weight: 700;
+      background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.25);
+      color: #4ade80;
+    }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: pulse-dot 1.5s infinite; }
+
+    .card-features { list-style: none; margin-top: 20px; display: flex; flex-direction: column; gap: 8px; }
+    .card-features li {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.8rem; color: rgba(255,255,255,0.5);
+    }
+    .card-features li::before {
+      content: ''; width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .check-icon {
+      width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .card-link {
+      display: inline-flex; align-items: center; gap: 6px; margin-top: 24px;
+      font-size: 0.82rem; font-weight: 700; color: var(--blue);
+      text-decoration: none; transition: gap 0.2s;
+    }
+    .card-link:hover { gap: 10px; }
+
+    /* ── HOW IT WORKS ── */
+    #how { padding: 90px 60px; }
+    .how-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+      margin-top: 56px; position: relative;
+    }
+    .how-grid::before {
+      content: ''; position: absolute; top: 28px; left: 12%; right: 12%; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,198,255,0.2), transparent);
+      z-index: 0;
+    }
+    .how-step {
+      text-align: center; padding: 0 24px; position: relative; z-index: 1;
+    }
+    .step-num {
+      width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 18px;
+      background: rgba(0,0,0,0.6); border: 1.5px solid rgba(0,198,255,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; font-weight: 800; color: var(--blue);
+      box-shadow: 0 0 20px rgba(0,198,255,0.15);
+      transition: all 0.3s;
+    }
+    .how-step:hover .step-num { background: rgba(0,198,255,0.12); box-shadow: 0 0 28px rgba(0,198,255,0.3); }
+    .step-title { font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .step-desc  { font-size: 0.78rem; color: rgba(255,255,255,0.35); line-height: 1.7; }
+
+    /* ── CTA BANNER ── */
+    .cta-section {
+      padding: 80px 60px;
+    }
+    .cta-inner {
+      border-radius: 28px; padding: 64px;
+      background: linear-gradient(135deg, rgba(0,198,255,0.1), rgba(0,114,255,0.08), rgba(139,92,246,0.08));
+      border: 1px solid rgba(0,198,255,0.18);
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .cta-inner::before {
+      content: ''; position: absolute;
+      width: 400px; height: 400px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,198,255,0.08), transparent 70%);
+      top: -100px; left: 50%; transform: translateX(-50%);
+      pointer-events: none;
+    }
+    .cta-inner h2 {
+      font-size: 2.2rem; font-weight: 800; color: #fff; margin-bottom: 14px;
+    }
+    .cta-inner p {
+      font-size: 0.95rem; color: rgba(255,255,255,0.4); margin-bottom: 36px; line-height: 1.7;
+    }
+    .cta-buttons { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative; z-index: 1;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 32px 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+    }
+    .footer-left { display: flex; align-items: center; gap: 10px; }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a {
+      font-size: 0.78rem; color: rgba(255,255,255,0.25);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .footer-links a:hover { color: rgba(255,255,255,0.6); }
+    .footer-copy { font-size: 0.75rem; color: rgba(255,255,255,0.2); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up {
+      opacity: 0; transform: translateY(24px);
+      transition: opacity 0.65s ease, transform 0.65s ease;
+    }
+    .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      header { padding: 0 24px; }
+      nav { display: none; }
+      section, #features, #how, .cta-section { padding: 60px 24px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .how-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+      .how-grid::before { display: none; }
+      footer { padding: 24px; flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<!-- ── HEADER ── -->
+<header id="header">
+  <a class="nav-brand" href="home.html">
+    <div class="brand-icon">
+      <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+      </svg>
+    </div>
+    <span class="brand-name">AiCare</span>
+  </a>
+
+  <nav>
+    <a href="#features">Features</a>
+    <a href="#how">How it works</a>
+    <a href="#about">About</a>
+  </nav>
+
+  <div class="nav-actions">
+    <a href="login.html" class="btn-ghost">Log In</a>
+    <a href="signup.html" class="btn-cta">Get Started Free</a>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="hero-badge">
+    <span>●</span> Now live — AI Study Plan
+  </div>
+
+  <h1>
+    Your AI Companion<br/>for <span class="gradient-text">Student Success</span>
+  </h1>
+
+  <p class="hero-sub">
+    Manage study plans, track your health, and build better lifestyle habits — all powered by AI, all in one beautiful platform.
+  </p>
+
+  <div class="hero-actions">
+    <a href="signup.html" class="btn-hero-primary">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      Start for Free
+    </a>
+    <a href="login.html" class="btn-hero-secondary">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+      Sign In
+    </a>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat-item">
+      <div class="stat-num"><span>10K+</span></div>
+      <div class="stat-desc">Students Enrolled</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div class="stat-num"><span>3</span></div>
+      <div class="stat-desc">AI Features</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div class="stat-num"><span>98%</span></div>
+      <div class="stat-desc">Satisfaction Rate</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div class="stat-num"><span>Free</span></div>
+      <div class="stat-desc">Always</div>
+    </div>
+  </div>
+
+  <div class="scroll-hint">
+    <span>Scroll to explore</span>
+    <svg class="scroll-arrow" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+    </svg>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section id="features">
+  <div class="features-header fade-up">
+    <div class="section-badge">✦ Features</div>
+    <h2 class="section-title">Everything a student needs</h2>
+    <p class="section-sub">Three powerful AI modules built to help you study smarter, stay healthier, and live better.</p>
+  </div>
+
+  <div class="features-grid">
+
+    <!-- AI STUDY PLAN — LIVE -->
+    <div class="feature-card featured fade-up">
+      <div class="card-icon-wrap" style="background:rgba(0,198,255,0.12);border:1px solid rgba(0,198,255,0.2);">
+        <div class="card-icon-glow" style="background:linear-gradient(135deg,#00c6ff,#0072ff);"></div>
+        <span style="position:relative;z-index:1;font-size:1.6rem;">📚</span>
+      </div>
+
+      <div class="card-title">
+        AI Study Plan
+        <span class="live-badge"><span class="live-dot"></span> Live</span>
+      </div>
+
+      <p class="card-desc">
+        Build personalized daily study schedules for any subject. Track your progress with visual charts, daily checklists, and streaks.
+      </p>
+
+      <ul class="card-features">
+        <li>
+          <div class="check-icon" style="background:rgba(0,198,255,0.12);border:1px solid rgba(0,198,255,0.2);">
+            <svg width="9" height="9" fill="none" stroke="#00c6ff" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          Daily task checklist with progress tracking
+        </li>
+        <li>
+          <div class="check-icon" style="background:rgba(0,198,255,0.12);border:1px solid rgba(0,198,255,0.2);">
+            <svg width="9" height="9" fill="none" stroke="#00c6ff" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          Visual pie chart completion overview
+        </li>
+        <li>
+          <div class="check-icon" style="background:rgba(0,198,255,0.12);border:1px solid rgba(0,198,255,0.2);">
+            <svg width="9" height="9" fill="none" stroke="#00c6ff" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          Weekly streak & study hour tracking
+        </li>
+        <li>
+          <div class="check-icon" style="background:rgba(0,198,255,0.12);border:1px solid rgba(0,198,255,0.2);">
+            <svg width="9" height="9" fill="none" stroke="#00c6ff" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          Add unlimited topics (AWS, AI, Python…)
+        </li>
+      </ul>
+
+      <a href="signup.html" class="card-link">
+        Get Started
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+
+    <!-- AI HEALTH CARE — COMING SOON -->
+    <div class="feature-card fade-up" style="transition-delay:0.1s;">
+      <div class="card-icon-wrap" style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.15);">
+        <div class="card-icon-glow" style="background:linear-gradient(135deg,#4ade80,#22c55e);"></div>
+        <span style="position:relative;z-index:1;font-size:1.6rem;">❤️</span>
+      </div>
+
+      <div class="card-title">
+        AI Health Care
+        <span class="coming-badge">🚀 Coming Soon</span>
+      </div>
+
+      <p class="card-desc">
+        Your personal AI health monitor. Log symptoms, track vitals, get smart wellness insights, and build healthy routines tailored to student life.
+      </p>
+
+      <ul class="card-features">
+        <li>
+          <div class="check-icon" style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.18);">
+            <svg width="9" height="9" fill="none" stroke="#4ade80" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          Daily health & mood check-ins
+        </li>
+        <li>
+          <div class="check-icon" style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.18);">
+            <svg width="9" height="9" fill="none" stroke="#4ade80" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          Sleep & hydration tracking
+        </li>
+        <li>
+          <div class="check-icon" style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.18);">
+            <svg width="9" height="9" fill="none" stroke="#4ade80" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          AI-powered wellness recommendations
+        </li>
+        <li>
+          <div class="check-icon" style="background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.18);">
+            <svg width="9" height="9" fill="none" stroke="#4ade80" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          Stress & burnout early alerts
+        </li>
+      </ul>
+
+      <div style="margin-top:24px;padding:12px 16px;border-radius:12px;
+                  background:rgba(74,222,128,0.05);border:1px solid rgba(74,222,128,0.12);">
+        <div style="font-size:0.75rem;color:rgba(74,222,128,0.7);font-weight:600;margin-bottom:4px;">Notify me when it's ready</div>
+        <div style="display:flex;gap:8px;">
+          <input type="email" placeholder="your@email.com" onclick="this.style.borderColor='rgba(74,222,128,0.4)'"
+            style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);
+                   background:rgba(255,255,255,0.04);color:#e2e8f0;font-size:0.78rem;outline:none;" />
+          <button onclick="notifyMe(this)"
+            style="padding:8px 14px;border-radius:8px;background:rgba(74,222,128,0.15);
+                   border:1px solid rgba(74,222,128,0.25);color:#4ade80;font-size:0.75rem;
+                   font-weight:700;cursor:pointer;transition:all 0.2s;white-space:nowrap;"
+            onmouseover="this.style.background='rgba(74,222,128,0.25)'"
+            onmouseout="this.style.background='rgba(74,222,128,0.15)'">Notify</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIFESTYLE — COMING SOON -->
+    <div class="feature-card fade-up" style="transition-delay:0.2s;">
+      <div class="card-icon-wrap" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.18);">
+        <div class="card-icon-glow" style="background:linear-gradient(135deg,#8b5cf6,#6366f1);"></div>
+        <span style="position:relative;z-index:1;font-size:1.6rem;">⚡</span>
+      </div>
+
+      <div class="card-title">
+        Lifestyle AI
+        <span class="coming-badge">🚀 Coming Soon</span>
+      </div>
+
+      <p class="card-desc">
+        Transform your daily habits with AI coaching. Get personalized routines, habit stacking suggestions, and a productivity score that grows with you.
+      </p>
+
+      <ul class="card-features">
+        <li>
+          <div class="check-icon" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);">
+            <svg width="9" height="9" fill="none" stroke="#a78bfa" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          Personalized morning & night routines
+        </li>
+        <li>
+          <div class="check-icon" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);">
+            <svg width="9" height="9" fill="none" stroke="#a78bfa" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          Habit stacking with smart reminders
+        </li>
+        <li>
+          <div class="check-icon" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);">
+            <svg width="9" height="9" fill="none" stroke="#a78bfa" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          Weekly productivity score & insights
+        </li>
+        <li>
+          <div class="check-icon" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);">
+            <svg width="9" height="9" fill="none" stroke="#a78bfa" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          Goal setting with AI accountability
+        </li>
+      </ul>
+
+      <div style="margin-top:24px;padding:12px 16px;border-radius:12px;
+                  background:rgba(139,92,246,0.06);border:1px solid rgba(139,92,246,0.14);">
+        <div style="font-size:0.75rem;color:rgba(139,92,246,0.8);font-weight:600;margin-bottom:4px;">Notify me when it's ready</div>
+        <div style="display:flex;gap:8px;">
+          <input type="email" placeholder="your@email.com"
+            style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);
+                   background:rgba(255,255,255,0.04);color:#e2e8f0;font-size:0.78rem;outline:none;" />
+          <button onclick="notifyMe(this)"
+            style="padding:8px 14px;border-radius:8px;background:rgba(139,92,246,0.15);
+                   border:1px solid rgba(139,92,246,0.25);color:#a78bfa;font-size:0.75rem;
+                   font-weight:700;cursor:pointer;transition:all 0.2s;white-space:nowrap;"
+            onmouseover="this.style.background='rgba(139,92,246,0.25)'"
+            onmouseout="this.style.background='rgba(139,92,246,0.15)'">Notify</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ── -->
+<section id="how">
+  <div class="features-header fade-up">
+    <div class="section-badge">✦ Process</div>
+    <h2 class="section-title">Up and running in minutes</h2>
+    <p class="section-sub">No complicated setup. Just sign up and start building better habits today.</p>
+  </div>
+
+  <div class="how-grid">
+    <div class="how-step fade-up">
+      <div class="step-num">1</div>
+      <div class="step-title">Create Account</div>
+      <p class="step-desc">Sign up for free in under 30 seconds. No credit card required, ever.</p>
+    </div>
+    <div class="how-step fade-up" style="transition-delay:0.1s;">
+      <div class="step-num">2</div>
+      <div class="step-title">Add Your Topics</div>
+      <p class="step-desc">Add study subjects like AWS, Python, or AI with your target days and hours.</p>
+    </div>
+    <div class="how-step fade-up" style="transition-delay:0.2s;">
+      <div class="step-num">3</div>
+      <div class="step-title">Follow Daily Plan</div>
+      <p class="step-desc">Check off tasks each day, watch your progress chart fill up, and maintain streaks.</p>
+    </div>
+    <div class="how-step fade-up" style="transition-delay:0.3s;">
+      <div class="step-num">4</div>
+      <div class="step-title">Achieve Goals 🎯</div>
+      <p class="step-desc">Track completion, hit milestones, and stay motivated with daily tips and quotes.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── ABOUT ── -->
+<section id="about" style="padding:60px 60px 0;">
+  <div style="max-width:720px;margin:0 auto;text-align:center;" class="fade-up">
+    <div class="section-badge">✦ About</div>
+    <h2 class="section-title">Built for students, by students</h2>
+    <p style="font-size:0.95rem;color:rgba(255,255,255,0.38);line-height:1.85;">
+      AiCare was born from a simple idea — students deserve better tools. Juggling coursework, health, and life is hard enough.
+      We built a platform that brings AI-powered planning into one clean, distraction-free space,
+      so you can focus on what matters: learning and growing.
+    </p>
+  </div>
+</section>
+
+<!-- ── CTA BANNER ── -->
+<div class="cta-section fade-up">
+  <div class="cta-inner">
+    <div class="section-badge" style="margin-bottom:20px;">✦ Get Started Today</div>
+    <h2>Ready to level up your student life?</h2>
+    <p>Join thousands of students who study smarter with AiCare.<br/>It's completely free — no credit card needed.</p>
+    <div class="cta-buttons">
+      <a href="signup.html" class="btn-hero-primary">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        Create Free Account
+      </a>
+      <a href="login.html" class="btn-hero-secondary">
+        Already have an account? Sign In →
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-left">
+    <div class="brand-icon" style="width:30px;height:30px;border-radius:8px;">
+      <svg width="15" height="15" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+      </svg>
+    </div>
+    <span style="font-size:0.875rem;font-weight:700;color:rgba(255,255,255,0.5);">AiCare</span>
+  </div>
+  <div class="footer-links">
+    <a href="#features">Features</a>
+    <a href="#how">How it works</a>
+    <a href="login.html">Login</a>
+    <a href="signup.html">Sign Up</a>
+  </div>
+  <div class="footer-copy">© 2026 AiCare Platform · All rights reserved</div>
+</footer>
+
+<script>
+// ── PARTICLES ────────────────────────────────────────
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+const pts = Array.from({length: 110}, () => ({
+  x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+  r: Math.random()*1.5+0.3, dx: (Math.random()-0.5)*0.4, dy: (Math.random()-0.5)*0.4
+}));
+(function draw() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  pts.forEach(p => {
+    p.x+=p.dx; p.y+=p.dy;
+    if(p.x<0||p.x>canvas.width) p.dx*=-1;
+    if(p.y<0||p.y>canvas.height) p.dy*=-1;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,198,255,0.55)';
+    ctx.shadowBlur=12; ctx.shadowColor='#00c6ff'; ctx.fill();
+  });
+  requestAnimationFrame(draw);
+})();
+window.addEventListener('resize',()=>{ canvas.width=window.innerWidth; canvas.height=window.innerHeight; });
+
+// ── SCROLL EFFECTS ───────────────────────────────────
+const header = document.getElementById('header');
+window.addEventListener('scroll', () => {
+  header.classList.toggle('scrolled', window.scrollY > 40);
+});
+
+// ── FADE-UP ON SCROLL ────────────────────────────────
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.12 });
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+// ── NOTIFY ME ────────────────────────────────────────
+function notifyMe(btn) {
+  const wrap = btn.parentElement;
+  const input = wrap.querySelector('input');
+  const email = input.value.trim();
+  if (!email || !email.includes('@')) { input.style.borderColor='rgba(239,68,68,0.5)'; return; }
+  btn.textContent = '✓ Done!';
+  btn.style.color = '#4ade80';
+  btn.style.borderColor = 'rgba(74,222,128,0.3)';
+  input.value = '';
+  input.placeholder = 'We\'ll notify you!';
+  setTimeout(() => { btn.textContent = 'Notify'; btn.style.color = ''; btn.style.borderColor = ''; }, 3000);
+}
+
+// ── REDIRECT IF LOGGED IN ────────────────────────────
+const sess = localStorage.getItem('aicare_session');
+if (sess && JSON.parse(sess).loggedIn) {
+  // Show a small banner instead of hard redirect
+  const banner = document.createElement('div');
+  banner.innerHTML = `
+    <div style="position:fixed;top:80px;right:24px;z-index:200;
+      background:rgba(0,0,0,0.8);backdrop-filter:blur(16px);
+      border:1px solid rgba(0,198,255,0.3);border-radius:14px;
+      padding:14px 20px;display:flex;align-items:center;gap:12px;
+      box-shadow:0 0 24px rgba(0,198,255,0.15);">
+      <svg width="16" height="16" fill="none" stroke="#00c6ff" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span style="font-size:0.82rem;color:rgba(255,255,255,0.7);">You're signed in.</span>
+      <a href="index.html" style="font-size:0.82rem;color:#00c6ff;font-weight:700;text-decoration:none;">Go to Dashboard →</a>
+    </div>`;
+  document.body.appendChild(banner);
+  setTimeout(() => banner.remove(), 6000);
+}
+</script>
+</body>
+</html>
