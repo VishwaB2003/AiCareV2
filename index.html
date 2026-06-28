@@ -7,6 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="/config.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     * { font-family: 'Inter', 'Segoe UI', Arial, sans-serif; }
@@ -1968,7 +1969,7 @@ document.querySelectorAll('.sidebar-link').forEach(link =>
 );
 
 // ── API ──────────────────────────────────────────────
-const API = 'http://localhost:8080/api';
+const API = (window.API_BASE || '') + '/api';
 function authHeaders() {
   const sess = JSON.parse(localStorage.getItem('aicare_session') || '{}');
   return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sess.token || ''}` };

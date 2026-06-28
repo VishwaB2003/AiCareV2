@@ -239,6 +239,7 @@
     }
     @keyframes pop { 0%{transform:scale(0.5);opacity:0} 80%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
   </style>
+  <script src="/config.js"></script>
 </head>
 <body>
 
@@ -521,7 +522,7 @@ document.getElementById('inp-password').addEventListener('focus', () => setStep(
 document.getElementById('inp-confirm').addEventListener('focus', () => setStep(2));
 
 // ── CONFIG ────────────────────────────────────────────
-const API = 'http://localhost:8080/api';
+const API = (window.API_BASE || '') + '/api';
 
 // ── ERROR DISPLAY ─────────────────────────────────────
 function showError(msg) {

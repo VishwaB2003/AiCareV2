@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Daily Quiz — AiCare</title>
+<script src="/config.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -203,7 +204,7 @@
 </div>
 
 <script>
-const API = 'http://localhost:8080/api';
+const API = (window.API_BASE || '') + '/api';
 const params = new URLSearchParams(location.search);
 const TOPIC      = params.get('topic')    || 'Unknown Topic';
 const TOPIC_ID   = params.get('topicId')  || '';

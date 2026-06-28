@@ -6,6 +6,7 @@
   <title>AiCare — Learn</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="/config.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     * { font-family: 'Inter', sans-serif; }
@@ -635,7 +636,7 @@ async function markDone() {
 
   try {
     if (TOPIC_ID > 0) {
-      const res = await fetch('http://localhost:8080/api/study/check', {
+      const res = await fetch(`${window.API_BASE || ''}/api/study/check`, {
         method: 'POST',
         headers: authHeaders(),
         body: JSON.stringify({ topicId: TOPIC_ID, taskIndex: TASK_IDX, checked: true })
@@ -661,7 +662,7 @@ async function initPage() {
   document.getElementById('topic-dot').style.background = COLOR;
 
   try {
-    const res = await fetch('http://localhost:8080/api/study/dashboard', {
+    const res = await fetch(`${window.API_BASE || ''}/api/study/dashboard`, {
       headers: authHeaders()
     });
     if (!res.ok) throw new Error();
@@ -706,7 +707,7 @@ async function loadContent() {
   }
 
   try {
-    const res = await fetch('http://localhost:8080/api/ai/explain', {
+    const res = await fetch(`${window.API_BASE || ''}/api/ai/explain`, {
       method: 'POST',
       headers: authHeaders(),
       body: JSON.stringify({ topic: TOPIC, task: TASK, dayNumber: DAY, totalDays: TOTAL_DAYS, dailyHours: HOURS })

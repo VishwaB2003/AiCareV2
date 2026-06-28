@@ -217,6 +217,7 @@
     .success-text { font-size: 1.2rem; font-weight: 700; color: #fff; }
     .success-sub  { font-size: 0.85rem; color: rgba(255,255,255,0.4); }
   </style>
+  <script src="/config.js"></script>
 </head>
 <body>
 
@@ -394,7 +395,7 @@ function togglePwd(id, btn) {
 }
 
 // ── CONFIG ───────────────────────────────────────────
-const API = 'http://localhost:8080/api';
+const API = (window.API_BASE || '') + '/api';
 
 // ── ERROR DISPLAY ─────────────────────────────────────
 function showError(msg) {

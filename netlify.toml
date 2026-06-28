@@ -1,0 +1,17 @@
+[build]
+  publish = "."
+
+# Proxy all /api/* requests to the Railway backend
+# IMPORTANT: Replace RAILWAY_BACKEND_URL with your actual Railway backend URL
+# after deploying the backend (e.g. https://aicare-backend.up.railway.app)
+[[redirects]]
+  from   = "/api/*"
+  to     = "https://RAILWAY_BACKEND_URL/api/:splat"
+  status = 200
+  force  = true
+
+# SPA fallback — serve index.html for unknown routes
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
